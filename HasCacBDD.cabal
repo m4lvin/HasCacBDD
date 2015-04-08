@@ -1,0 +1,22 @@
+name:                HasCacBDD
+version:             0.1.0.0
+synopsis:             Haskell bindings for CacBDD 
+homepage:            https://github.com/m4lvin/HasCacBDD
+license:             GPL-2
+license-file:        LICENSE
+author:              Malvin Gattinger
+maintainer:          malvin@w4eg.de
+category:            Data
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Data.HasCacBDD
+  build-depends:       base >=4.7 && <4.8
+  default-language:    Haskell2010
+  hs-source-dirs:      hs
+  extra-lib-dirs:      /usr/local/cacbdd
+  include-dirs:        /usr/local/cacbdd
+  extra-libraries:     stdc++, BDDNodeC
+  cc-options:          -fPIC -shared
+  ghc-options:         -pgml g++ -auto-all -Wall -O2 -fPIC
