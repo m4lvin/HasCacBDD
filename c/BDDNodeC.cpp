@@ -29,7 +29,7 @@ BDD BDD_Permute(const BDD* this_ptr, const vector<int>* permu) { return this_ptr
 
 BDD BDD_AndExist(BDD* this_ptr, const BDD* other, const BDD* cube) { return this_ptr->AndExist(*other, *cube); }
 
-bool BDD_IsComp(BDD* this_ptr) { return (bool) this_ptr->IsComp(); }
+bool BDD_IsComp(BDD* this_ptr) { bool b = this_ptr->IsComp(); return b; }
 
 void BDD_Support(BDD* this_ptr, vector<int>* vars) { this_ptr->Support(*vars); }
 

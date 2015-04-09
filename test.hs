@@ -19,6 +19,8 @@ main = do
   putStrLn $ show $ var 1 == var 1
   putStrLn $ show $ imp (var 1) (var 1) == top
   putStrLn $ show $ equ (var 1) (var 1) == top
+  putStrLn $ show $ exists 1 (neg $ var 1) == top
+  putStrLn $ show $ gfp (\b -> con b (var 3)) == (var 3)
   putStrLn $ "\nAnd some contradictions:"
   putStrLn $ show $ bot == top
   putStrLn $ show $ top == bot
@@ -26,6 +28,7 @@ main = do
   putStrLn $ show $ dis (var 1) (neg $ var 2) == top
   putStrLn $ show $ dis (var 1) (var 2) == top
   putStrLn $ show $ (var 1) == (var 2)
+  putStrLn $ show $ forall 1 (var 1) == top
   putStrLn $ "\nLaws from de Morgan:"
   putStrLn $ show $ dis (neg $ var 1) (neg $ var 2) == (neg $ con (var 1) (var 2))
   putStrLn $ show $ con (neg $ var 1) (neg $ var 2) == (neg $ dis (var 1) (var 2))
