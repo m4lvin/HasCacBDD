@@ -1,6 +1,7 @@
 #include "BDDNodeC.h"
 
 #include "BDDNode.h"
+#include <stdio.h>
 
 BDD* BDD_new_XManagerPDD(XManager* m, DD vNode) { return new BDD(m, vNode); }
 
@@ -28,13 +29,11 @@ BDD BDD_Permute(const BDD* this_ptr, const vector<int>* permu) { return this_ptr
 
 BDD BDD_AndExist(BDD* this_ptr, const BDD* other, const BDD* cube) { return this_ptr->AndExist(*other, *cube); }
 
-bool BDD_IsComp(BDD* this_ptr) { return this_ptr->IsComp(); }
+bool BDD_IsComp(BDD* this_ptr) { return (bool) this_ptr->IsComp(); }
 
 void BDD_Support(BDD* this_ptr, vector<int>* vars) { this_ptr->Support(*vars); }
 
 const XManager* BDD_manager(const BDD* this_ptr) { return this_ptr->manager(); }
-
-DD BDD_Node(const BDD* this_ptr) { return this_ptr->Node(); }
 
 XBDDManager* XBDDManager_new(int varCount) { return new XBDDManager(varCount); }
 
@@ -42,11 +41,11 @@ void XBDDManager_delete(XBDDManager* this_ptr) { delete this_ptr; }
 
 void XBDDManager_Clear(XBDDManager* this_ptr, int varCnt) { this_ptr->Clear(varCnt); }
 
-BDD XBDDManager_BddOne(XBDDManager* this_ptr) { return this_ptr->BddOne(); }
+BDD XBDDManager_BddOne(XBDDManager* this_ptr) { return (BDD) this_ptr->BddOne(); }
 
-BDD XBDDManager_BddZero(XBDDManager* this_ptr) { return this_ptr->BddZero(); }
+BDD XBDDManager_BddZero(XBDDManager* this_ptr) { return (BDD) this_ptr->BddZero(); }
 
-BDD XBDDManager_BddVar(XBDDManager* this_ptr, int varIndex) { return this_ptr->BddVar(varIndex); }
+BDD XBDDManager_BddVar(XBDDManager* this_ptr, int varIndex) { BDD bar = this_ptr->BddVar(varIndex); return bar; }
 
 BDD XBDDManager_Ite(XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD* h) { return this_ptr->Ite(*f, *g, *h); }
 
@@ -54,11 +53,11 @@ const XManager* XBDDManager_manager(const XBDDManager* this_ptr) { return this_p
 
 void XBDDManager_ShowInfo(XBDDManager* this_ptr, double vtime) { this_ptr->ShowInfo(vtime); }
 
-BDD BDD_Operator_Not(const BDD* this_ptr) { return (BDD) (! *this_ptr); }
+BDD BDD_Operator_Not(const BDD* this_ptr) { BDD bar = (! *this_ptr); return bar;  }
 
-bool BDD_Operator_Equal(const BDD* this_ptr, const BDD* other) { return(bool) (*this_ptr == *other); }
+bool BDD_Operator_Equal(const BDD* this_ptr, const BDD* other) { bool b = (*this_ptr == *other); return b; }
 
-BDD BDD_Operator_Or(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr + *other); }
+BDD BDD_Operator_Or(const BDD* this_ptr, const BDD* other) { BDD bar = (*this_ptr + *other); return bar; }
 
 BDD BDD_Operator_And(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr * *other); }
 
@@ -77,3 +76,9 @@ BDD BDD_Operator_Nor(const BDD* this_ptr, const BDD* other) { return (BDD) (*thi
 BDD BDD_Operator_Nand(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr | *other); }
 
 BDD BDD_Operator_XNor(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr & *other); }
+
+// void BDD_Show(const BDD* this_ptr) {
+//   XManager* mgr = this_ptr->manager();
+//   this_ptr->Node() // this gives us a DD ...
+//   mgr->PrintNode( ...); // ... but here we want to put in a DdNode
+// }

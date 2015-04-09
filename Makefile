@@ -1,28 +1,30 @@
 
 HS      = ghc
-HSFLAGS = -O0 -lstdc++ -Wall -fno-cse
+HSFLAGS = -lstdc++ -Wall -fno-cse
 
 CPP     = g++
-CFLAGS  = -g -c -shared -fPIC -O0
+CFLAGS  = -g -c -shared -fPIC
 
 CABALFLAGS = --with-gcc=g++
 
+LIBDIR = /usr/local/cacbdd/
+LIBFILE = libBDDNodeC.a
+
 default:
-	echo "Please select steps by hand."
+	@echo "To install CacBDD to $(LIBDIR) and then cabal install Data.HasCacBDD, use 'make all'."
+	@echo "For more details look at the Makefile."
 
 cppbuild:
 	cd cpp && make
 
-cppinstall:
-	mkdir -p /usr/local/cacbdd
-	cp cpp/*.o /usr/local/cacbdd
-	cp cpp/*.h /usr/local/cacbdd
-
 cbuild:
-	$(CPP) $(CFLAGS) -I/usr/local/cacbdd -o c/libBDDNodeC.so c/BDDNodeC.cpp
+	$(CPP) $(CFLAGS) -Icpp -o dist/libBDDNodeC.so c/BDDNodeC.cpp
 
 cinstall:
-	cp c/* /usr/local/cacbdd
+	mkdir -p $(LIBDIR)
+	rm -f $(LIBDIR)$(LIBFILE)
+	ar rvs $(LIBDIR)$(LIBFILE) dist/libBDDNodeC.so
+	ar rvs $(LIBDIR)$(LIBFILE) cpp/*.o
 
 hsbuild:
 	cabal configure $(CABALFLAGS)
@@ -31,11 +33,7 @@ hsbuild:
 hsinstall:
 	cabal install $(CABALFLAGS)
 
-testlocal:
-	$(HS) $(HSFLAGS) test.hs -o dist/test cpp/Manager.o cpp/BDDNode.o cpp/DdNode.o cpp/UTable.o cpp/CTable.o
-	dist/test
-
-testinstalled:
+test:
 	$(HS) $(HSFLAGS) test.hs -o dist/test
 	dist/test
 
@@ -49,11 +47,7 @@ clean:
 
 all:
 	make cppbuild
-	make cppinstall
 	make cbuild
-	make cinstall
+	sudo make cinstall
 	make hsbuild
 	make hsinstall
-
-cuninstall:
-	rm -rf /usr/local/cacbdd

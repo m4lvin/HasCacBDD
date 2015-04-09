@@ -19,4 +19,4 @@ library
   include-dirs:        /usr/local/cacbdd
   extra-libraries:     stdc++, BDDNodeC
   cc-options:          -fPIC -shared
-  ghc-options:         -pgml g++ -auto-all -Wall -O2 -fPIC
+  ghc-options:         -pgml g++ -auto-all -Wall -O2 -fPIC -fno-full-laziness
