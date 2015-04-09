@@ -2,7 +2,9 @@
 
 WHERE	= .
 CPP	= g++
-CFLAGS = -g -O3 -Wno-deprecated
+CFLAGS = -g -O3 -Wno-deprecated -shared -fPIC
+
+CBINFLAGS = -g -O3 -Wno-deprecated
 
 INCLUDE = $(WHERE)/include
 
@@ -34,7 +36,7 @@ OBJS	= $(OBJ1) $(OBJ2) $(OBJ3) $(OBJ4) $(OBJ5) $(OBJ6)
 TARGET	= t
 #------------------------------------------------------
 $(TARGET): $(OBJS)
-	$(CPP) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS) -lm
+	$(CPP) $(CBINFLAGS) -o $(TARGET) $(OBJS) $(LIBS) -lm
 
 $(OBJ1): $(SRC1)
 	$(CPP) -c $(SRC1) -I$(INCLUDE) $(CFLAGS)
