@@ -1,9 +1,9 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Data.HasCacBDD (
   -- types:
-  Bdd, -- Assignment,
+  Bdd, Assignment,
   -- creation:
-  top, bot, var, -- node,
+  top, bot, var,
   -- combination and manipulation:
   neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
   exists, forall, forallSet, existsSet,
@@ -11,12 +11,11 @@ module Data.HasCacBDD (
   gfp,
     -- relabel,
   -- get satisfying assignments:
-  allSats, allSatsWith, satCountWith, -- anySat, anySatWith,
+  allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- information and visualization:
-    info -- genGraph, showGraph,
-  )
-
-where
+  info, unravel,
+  BddTree(..)
+) where
 
 import Data.Word
 import Foreign.C
@@ -24,7 +23,7 @@ import Foreign.Ptr
 import System.IO.Unsafe
 import Data.List
 
-newtype Bdd = Bdd (Ptr Bdd) deriving (Show)
+newtype Bdd = Bdd (Ptr Bdd)
 
 newtype XBddManager = XBddManager (Ptr XBddManager) deriving (Show)
 
@@ -36,19 +35,11 @@ foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar 
 
 foreign import ccall "BDDNodeC.h BDD_Operator_Equal" bdd_Operator_Equal :: Bdd -> Bdd -> IO Bool
 
--- foreign import ccall "BDDNodeC.h BDD_Show" bdd_show :: Bdd -> IO () -- TODO later
-
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not" bdd_Operator_Not :: Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or" bdd_Operator_Or :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And" bdd_Operator_And :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Xor" bdd_Operator_Xor :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessThan" bdd_Operator_LessThan :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_MoreThan" bdd_Operator_MoreThan :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_MoreEqual" bdd_Operator_MoreEqual :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Nor" bdd_Operator_Nor :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Nand" bdd_Operator_Nand :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_XNor" bdd_Operator_XNor :: Bdd -> Bdd -> Bdd -> IO Bdd
 
 foreign import ccall unsafe "BDDNodeC.h BDD_Exist"     bdd_Exist :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Universal" bdd_Universal :: Bdd -> Bdd -> Bdd -> IO Bdd
@@ -77,9 +68,6 @@ forallSet ns b = foldl (flip forall) b ns
 
 existsSet :: [Int] -> Bdd -> Bdd
 existsSet ns b = foldl (flip exists) b ns
-
--- foreign import ccall unsafe "XBDDManager_ShowInfo" xBddManager_ShowInfo :: XBddManager -> CInt -> IO ()
--- foreign import ccall unsafe "Bdd_manager" bdd_Manager :: Bdd -> IO XBddManager
 
 manager :: XBddManager
 manager = unsafePerformIO (xBddManager_new 1048576) -- fix the number of variables
@@ -155,7 +143,7 @@ gfp operator = gfpStep top (operator top) where
       then current
       else gfpStep next (operator next)
 
-foreign import ccall "BDDNodeC.h BDD_IsComp" bdd_isBot :: Bdd -> IO Bool
+foreign import ccall "BDDNodeC.h BDD_IsComp" bdd_isComp :: Bdd -> IO Bool
 foreign import ccall "BDDNodeC.h BDD_Variable" bdd_Variable :: Bdd -> IO CInt
 foreign import ccall "BDDNodeC.h BDD_Then" bdd_Then :: Bdd -> Bdd -> IO Bdd
 foreign import ccall "BDDNodeC.h BDD_Else" bdd_Else :: Bdd -> Bdd -> IO Bdd
@@ -170,28 +158,43 @@ elseOf b = unsafePerformIO (bdd_Else (unsafePerformIO (bdd_new 8)) b)
 topvar :: CInt
 topvar = 2147483647 -- 1024^3 * 2 - 1
 
-info :: Bdd -> String
-info b = unsafePerformIO $ do
-  comp <- bdd_isBot b
-  if comp then
-    return "bot"
+info :: Bdd -> IO ()
+info b = do
+  comp <- bdd_isComp b
+  putStrLn $ "Composed? " ++ (show comp)
+  v <- bdd_Variable b
+  let n = (fromIntegral v)-(1::Int)
+  putStrLn $ "Variable? " ++ (show n)
+--   info $ thenOf b
+--   info $ elseOf b
+
+data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
+
+unravel :: Bdd -> BddTree
+unravel b = unsafePerformIO $ do
+  isbot <- bdd_isComp b
+  v <- bdd_Variable b
+  if (isbot && v==topvar) then
+    return Bot
   else do
-    v <- bdd_Variable b
     if v==topvar then
-      return "top"
-    else
-      return $ ("(" ++ (show ((fromIntegral v)-(1::Integer))))
-	++ " ? " ++ (info $ thenOf b) ++ " : " ++ (info $ elseOf b) ++ ")"
+      return Top
+    else do
+      let n = (fromIntegral v)-(1::Int)
+      return $ Var n (unravel (thenOf b)) (unravel (elseOf b))
+
+instance Show Bdd where
+  show b = show (unravel b)
 
 type Assignment = [(Int,Bool)]
 
 allSats :: Bdd -> [Assignment]
 allSats b = unsafePerformIO $ do
-  isbot <- bdd_isBot b
-  if isbot then
+  isbot <- bdd_isComp b
+  v <- bdd_Variable b
+  if (isbot && v==topvar) then
     return [ ]
   else do
-    v <- bdd_Variable b
     if v==topvar then
       return [ [] ]
     else do
@@ -199,9 +202,25 @@ allSats b = unsafePerformIO $ do
       return $ [ (n,True):rest | rest <- allSats (thenOf b) ]
 	++ [ (n,False):rest | rest <- allSats (elseOf b) ]
 
--- -- find the lexicographically smallest satisfying assignment
--- anySat :: Bdd -> Maybe Assignment
--- anySat b =
+-- find the lexicographically smallest satisfying assignment
+anySat :: Bdd -> Maybe Assignment
+anySat b = unsafePerformIO $ do
+  isbot <- bdd_isComp b
+  v <- bdd_Variable b
+  if (isbot && v==topvar) then
+    return Nothing
+  else do
+    if v==topvar then
+      return (Just [])
+    else do
+      let n = (fromIntegral v)-(1::Int)
+      leftisbot <- bdd_isComp (thenOf b)
+      if leftisbot then do
+	let (Just rest) = (anySat (elseOf b))
+	return $ Just ((n,False):rest)
+      else do
+	let (Just rest) = (anySat (thenOf b))
+	return $ Just ((n,True):rest)
 
 -- given a set of all vars, complete an assignment
 completeAss :: [Int] -> Assignment -> [Assignment]
@@ -222,3 +241,13 @@ allSatsWith allvars b = concat $ map (completeAss allvars) (allSats b) where
 -- this is not efficient and could be done without actually generating them!
 satCountWith :: [Int] -> Bdd -> Int
 satCountWith allvars b = length (allSatsWith allvars b)
+
+anySatWith :: [Int] -> Bdd -> Maybe Assignment
+anySatWith allvars b = unsafePerformIO $ do
+  isbot <- bdd_isComp b
+  v <- bdd_Variable b
+  if (isbot && v==topvar) then
+    return Nothing
+  else do
+    let (Just ass) = (anySat b)
+    return $ Just $ head $ completeAss allvars ass

@@ -76,9 +76,3 @@ BDD BDD_Operator_Nor(const BDD* this_ptr, const BDD* other) { return (BDD) (*thi
 BDD BDD_Operator_Nand(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr | *other); }
 
 BDD BDD_Operator_XNor(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr & *other); }
-
-// void BDD_Show(const BDD* this_ptr) {
-//   XManager* mgr = this_ptr->manager();
-//   this_ptr->Node() // this gives us a DD ...
-//   mgr->PrintNode( ...); // ... but here we want to put in a DdNode
-// }
