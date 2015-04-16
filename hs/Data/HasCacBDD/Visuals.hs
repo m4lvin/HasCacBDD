@@ -1,3 +1,5 @@
+-- | Very simple visualisation of BDDs using /dot/.
+
 module Data.HasCacBDD.Visuals (
   genGraph,
   showGraph
@@ -35,6 +37,7 @@ allLabels ab = nub $ allLabels' ab where
   allLabels' (ATop n) = [n]
   allLabels' (AVar _ lhs rhs l) = [l] ++ (allLabels lhs) ++ (allLabels rhs)
 
+-- | Generate a string which describes the BDD in the dor language.
 genGraph :: Bdd -> String
 genGraph myb = genGraph' (unravel myb) where
   genGraph' (Bot) = "digraph g { Bot [label=\"0\",shape=\"box\"]; }"
@@ -63,6 +66,7 @@ genGraph myb = genGraph' (unravel myb) where
       lp l = show $ n where (Just n) = lookup l nodelabelling
       nodelabelling = zip (allLabels (annotate b)) [(0::Int)..]
 
+-- | Display the graph of a BDD with dot.
 showGraph :: Bdd -> IO ()
 showGraph b = do
   (inp,_,_,pid) <- runInteractiveProcess "/usr/bin/dot" ["-Tx11"] Nothing Nothing

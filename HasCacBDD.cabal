@@ -11,6 +11,8 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 description: Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
+             This package provides access to a C-wrapper which in turn calls the original C++ code.
+             More information about CacBDD is available at <http://kailesu.net/CacBDD>.
 
 source-repository head
   type:     git

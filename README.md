@@ -5,6 +5,8 @@ Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
 
 Using CacBDD from http://kailesu.net/CacBDD/
 
-To install, type 'make all'. This will i) install CacBDD and the C wrapper
-to /usr/local/cacbdd and ii) run 'cabal install' to install Data.HasCacBDD.
+You probably want to type 'make all' which will
+1) Download CacBDD from http://kailesu.net/CacBDD/CacBDD.zip
+2) Install a C-wrapped version of CacBDD to $(LIBDIR)
+3) Install Data.HasCacBDD  with cabal.
 For more details look at the Makefile.

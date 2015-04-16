@@ -5,11 +5,7 @@
 
 BDD* BDD_new_XManagerPDD(XManager* m, DD vNode) { return new BDD(m, vNode); }
 
-BDD* BDD_new_BDDP(const BDD* right) { return new BDD(*right); }
-
 BDD* BDD_new() { return new BDD(); }
-
-void BDD_delete(BDD* this_ptr) { delete this_ptr; }
 
 int BDD_Variable(BDD* this_ptr) { return this_ptr->Variable(); }
 
@@ -37,21 +33,15 @@ const XManager* BDD_manager(const BDD* this_ptr) { return this_ptr->manager(); }
 
 XBDDManager* XBDDManager_new(int varCount) { return new XBDDManager(varCount); }
 
-void XBDDManager_delete(XBDDManager* this_ptr) { delete this_ptr; }
-
-void XBDDManager_Clear(XBDDManager* this_ptr, int varCnt) { this_ptr->Clear(varCnt); }
-
 BDD XBDDManager_BddOne(XBDDManager* this_ptr) { return (BDD) this_ptr->BddOne(); }
 
 BDD XBDDManager_BddZero(XBDDManager* this_ptr) { return (BDD) this_ptr->BddZero(); }
 
 BDD XBDDManager_BddVar(XBDDManager* this_ptr, int varIndex) { BDD bar = this_ptr->BddVar(varIndex); return bar; }
 
-BDD XBDDManager_Ite(XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD* h) { return this_ptr->Ite(*f, *g, *h); }
+BDD XBDDManager_Ite(XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD* h) { return (BDD) this_ptr->Ite(*f, *g, *h); }
 
 const XManager* XBDDManager_manager(const XBDDManager* this_ptr) { return this_ptr->manager(); }
-
-void XBDDManager_ShowInfo(XBDDManager* this_ptr, double vtime) { this_ptr->ShowInfo(vtime); }
 
 BDD BDD_Operator_Not(const BDD* this_ptr) { BDD bar = (! *this_ptr); return bar;  }
 
@@ -63,13 +53,7 @@ BDD BDD_Operator_And(const BDD* this_ptr, const BDD* other) { return(BDD) (*this
 
 BDD BDD_Operator_Xor(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr ^ *other); }
 
-BDD BDD_Operator_LessThan(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr < *other); }
-
-BDD BDD_Operator_MoreThan(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr > *other); }
-
 BDD BDD_Operator_LessEqual(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr <= *other); }
-
-BDD BDD_Operator_MoreEqual(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr >= *other); }
 
 BDD BDD_Operator_Nor(const BDD* this_ptr, const BDD* other) { return (BDD) (*this_ptr % *other); }
 
