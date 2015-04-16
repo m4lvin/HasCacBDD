@@ -1,9 +1,9 @@
 
+C       = g++
+CFLAGS  = -g -c -shared -fPIC
+
 HS      = ghc
 HSFLAGS = -lstdc++ -Wall -fno-cse
-
-CPP     = g++
-CFLAGS  = -g -c -shared -fPIC
 
 CABALFLAGS = --with-gcc=g++
 
@@ -11,20 +11,31 @@ LIBDIR = /usr/local/cacbdd/
 LIBFILE = libBDDNodeC.a
 
 default:
-	@echo "To install CacBDD to $(LIBDIR) and then cabal install Data.HasCacBDD, use 'make all'."
+	@echo "You probably want to type 'make all' which will"
+	@echo "1) Download CacBDD from http://kailesu.net/CacBDD/CacBDD.zip"
+	@echo "2) Install a C-wrapped version of CacBDD to $(LIBDIR)"
+	@echo "3) Install Data.HasCacBDD  with cabal."
 	@echo "For more details look at the Makefile."
 
+getcpp:
+	mkdir -p ./dist/cpp
+	if [ ! -f ./dist/cpp/BDDNode.h ] ; \
+	then wget -c http://kailesu.net/CacBDD/CacBDD.zip -O ./dist/CacBDD.zip ; \
+	unzip -n ./dist/CacBDD.zip -d ./dist/cpp/ ; \
+	patch ./dist/cpp/Makefile ./CacBDD-Makefile.patch ; \
+	fi ;
+
 cppbuild:
-	cd cpp && make
+	cd ./dist/cpp && make
 
 cbuild:
-	$(CPP) $(CFLAGS) -Icpp -o dist/libBDDNodeC.so c/BDDNodeC.cpp
+	$(C) $(CFLAGS) -Idist/cpp -o dist/libBDDNodeC.so c/BDDNodeC.cpp
 
 cinstall:
 	mkdir -p $(LIBDIR)
 	rm -f $(LIBDIR)$(LIBFILE)
 	ar rvs $(LIBDIR)$(LIBFILE) dist/libBDDNodeC.so
-	ar rvs $(LIBDIR)$(LIBFILE) cpp/*.o
+	ar rvs $(LIBDIR)$(LIBFILE) dist/cpp/*.o
 
 hsbuild:
 	cabal configure $(CABALFLAGS)
@@ -38,14 +49,10 @@ test:
 	dist/test
 
 clean:
-	cd cpp && make cla
 	rm -rf dist/*
-	rm -f c/*.o
-	rm -f c/*.so
-	rm -f *.hi
-	rm -f *.o
 
 all:
+	make getcpp
 	make cppbuild
 	make cbuild
 	sudo make cinstall
