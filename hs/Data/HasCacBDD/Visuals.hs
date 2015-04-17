@@ -51,9 +51,9 @@ genGraph myb = genGraph' (unravel myb) where
 	  (ABot _) -> "n"++(lp l)++" -> Bot;\n"
 	  (AVar _ _ _ l') -> "n"++(lp l)++" -> n"++(lp l')++";\n" ++ genGraphStep lhs
 	++ case rhs of
-	  (ATop _) -> "n"++(lp l)++" -> Top; [style=dashed]\n"
-	  (ABot _) -> "n"++(lp l)++" -> Bot; [style=dashed]\n"
-	  (AVar _ _ _ l') -> "n"++(lp l)++" -> n"++(lp l')++"; [style=dashed]\n" ++ genGraphStep rhs
+	  (ATop _) -> "n"++(lp l)++" -> Top [style=dashed];\n"
+	  (ABot _) -> "n"++(lp l)++" -> Bot [style=dashed];\n"
+	  (AVar _ _ _ l') -> "n"++(lp l)++" -> n"++(lp l')++" [style=dashed];\n" ++ genGraphStep rhs
       genGraphStep _ = ""
       sinks = "Bot [label=\"0\",shape=\"box\"];\n" ++ "Top [label=\"1\",shape=\"box\"];\n"
       rankings = concat [ "{ rank=same; "++(sepBy " " (nub $ nodesOf v (annotate b)))++" }\n" | v <- varsOf b ]

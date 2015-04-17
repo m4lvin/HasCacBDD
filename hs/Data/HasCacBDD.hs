@@ -14,7 +14,7 @@ module Data.HasCacBDD (
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel
+  BddTree(..), unravel, ravel, firstVarOf
 ) where
 
 import Data.Word
@@ -41,11 +41,10 @@ foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not   
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Xor"    bdd_Operator_Xor    :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd
+-- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd -- disabled because CacBDD seems to do something else here.
 foreign import ccall unsafe "BDDNodeC.h BDD_Exist"           bdd_Exist           :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Universal"       bdd_Universal       :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Restrict"        bdd_Restrict        :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_IsComp"          bdd_isComp          :: Bdd -> IO Bool
 foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable        :: Bdd -> IO CInt
 foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: Bdd -> Bdd -> IO Bdd
@@ -121,9 +120,10 @@ equ :: Bdd -> Bdd -> Bdd
 equ b1 b2 = con (imp b1 b2) (imp b2 b1) -- ugly...
 {-# NOINLINE equ #-}
 
--- | Implication
+-- | Implication, for now implemented with disjunction and negation.
 imp :: Bdd -> Bdd -> Bdd
-imp b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
+imp b1 b2 = dis (neg b1) (b2)
+-- imp b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
 {-# NOINLINE imp #-}
 
 -- | Conjunction
@@ -148,6 +148,7 @@ conSet (b:bs) =
   if elem bot (b:bs)
     then bot
     else foldl con b bs
+{-# NOINLINE conSet #-}
 
 -- | Big Disjunction
 disSet :: [Bdd] -> Bdd
@@ -156,11 +157,13 @@ disSet (b:bs) =
   if elem top (b:bs)
     then top
     else foldl dis b bs
+{-# NOINLINE disSet #-}
 
 -- | Big Xor
 xorSet :: [Bdd] -> Bdd
 xorSet [] = bot
 xorSet (b:bs) = foldl xor b bs
+{-# NOINLINE xorSet #-}
 
 -- | Greatest fixpoint for a given operator.
 gfp :: (Bdd -> Bdd) -> Bdd
@@ -177,8 +180,13 @@ thenOf b = unsafePerformIO (bdd_Then (unsafePerformIO (bdd_new 8)) b)
 elseOf :: Bdd -> Bdd
 elseOf b = unsafePerformIO (bdd_Else (unsafePerformIO (bdd_new 8)) b)
 
-topvar :: CInt
-topvar = 2147483647 -- 1024^3*2-1 represents top in CacBDD.
+firstVarOf :: Bdd -> Maybe Int
+firstVarOf b
+  | (b == bot) = Nothing
+  | (b == top) = Nothing
+  | otherwise = unsafePerformIO $ do
+      v <- bdd_Variable b
+      return $ Just ((fromIntegral v)-(1::Int))
 
 instance Show Bdd where
   show b = show (unravel b)
@@ -188,17 +196,10 @@ data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
 
 -- | Convert a BDD to a tree.
 unravel :: Bdd -> BddTree
-unravel b = unsafePerformIO $ do
-  isbot <- bdd_isComp b
-  v <- bdd_Variable b
-  if (isbot && v==topvar) then
-    return Bot
-  else do
-    if v==topvar then
-      return Top
-    else do
-      let n = (fromIntegral v)-(1::Int)
-      return $ Var n (unravel (thenOf b)) (unravel (elseOf b))
+unravel b
+  | (b == bot) = Bot
+  | (b == top) = Top
+  | otherwise = Var n (unravel (thenOf b)) (unravel (elseOf b)) where (Just n) = firstVarOf b
 
 -- | Convert a tree to a BDD.
 ravel :: BddTree -> Bdd
@@ -212,38 +213,22 @@ type Assignment = [(Int,Bool)]
 -- | Get all satisfying assignments. These will be partial, i.e. only
 -- contain (a subset of) the variables that actually occur in the BDD.
 allSats :: Bdd -> [Assignment]
-allSats b = unsafePerformIO $ do
-  isbot <- bdd_isComp b
-  v <- bdd_Variable b
-  if (isbot && v==topvar) then
-    return [ ]
-  else do
-    if v==topvar then
-      return [ [] ]
-    else do
-      let n = (fromIntegral v)-(1::Int)
-      return $ [ (n,True):rest | rest <- allSats (thenOf b) ]
-	++ [ (n,False):rest | rest <- allSats (elseOf b) ]
+allSats b
+  | (b == bot) = []
+  | (b == top) = [ [] ]
+  | otherwise =
+      [ (n,True):rest | rest <- allSats (thenOf b) ] ++ [ (n,False):rest | rest <- allSats (elseOf b) ]
+      where (Just n) = firstVarOf b
 
 -- | Get the lexicographically smallest satisfying assignment, if there is any.
 anySat :: Bdd -> Maybe Assignment
-anySat b = unsafePerformIO $ do
-  isbot <- bdd_isComp b
-  v <- bdd_Variable b
-  if (isbot && v==topvar) then
-    return Nothing
-  else do
-    if v==topvar then
-      return (Just [])
-    else do
-      let n = (fromIntegral v)-(1::Int)
-      leftisbot <- bdd_isComp (thenOf b)
-      if leftisbot then do
-	let (Just rest) = (anySat (elseOf b))
-	return $ Just ((n,False):rest)
-      else do
-	let (Just rest) = (anySat (thenOf b))
-	return $ Just ((n,True):rest)
+anySat b
+  | (b == bot) = Nothing
+  | (b == top) = Just []
+  | otherwise = Just ((n,hastobetrue):rest) where
+      hastobetrue = elseOf b == bot
+      (Just n)    = firstVarOf b
+      (Just rest) = if hastobetrue then anySat (thenOf b) else anySat (elseOf b)
 
 -- | Given a set of all variables, complete an assignment.
 completeAss :: [Int] -> Assignment -> [Assignment]
@@ -268,14 +253,9 @@ satCountWith allvars b = length (allSatsWith allvars b)
 -- | Given a set of all variables, get the lexicographically smallest complete
 -- satisfying assignment, if there is any.
 anySatWith :: [Int] -> Bdd -> Maybe Assignment
-anySatWith allvars b = unsafePerformIO $ do
-  isbot <- bdd_isComp b
-  v <- bdd_Variable b
-  if (isbot && v==topvar) then
-    return Nothing
-  else do
-    let (Just ass) = (anySat b)
-    return $ Just $ head $ completeAss allvars ass
+anySatWith allvars b = case (anySat b) of
+  Nothing -> Nothing
+  Just partass -> Just $ head $ completeAss allvars partass
 
 -- | Relabel variables according to the given mapping. Note that we
 -- unravel the whole BDD, hence this is an expensive operation.

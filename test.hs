@@ -21,6 +21,9 @@ main = do
   putStrLn $ show $ equ (var 1) (var 1) == top
   putStrLn $ show $ exists 1 (neg $ var 1) == top
   putStrLn $ show $ gfp (\b -> con b (var 3)) == (var 3)
+  putStrLn $ show $ imp (conSet [var 1, var 0]) (var 1) == top
+  putStrLn $ show $ imp (conSet [var 0, var 1]) (var 0) == top
+  putStrLn $ show $ imp (con (var 0) (var 1)) (var 0) == top
   putStrLn $ "\nAnd some contradictions:"
   putStrLn $ show $ bot == top
   putStrLn $ show $ top == bot
