@@ -23,6 +23,7 @@ getcpp:
 	then wget -c http://kailesu.net/CacBDD/CacBDD.zip -O ./dist/CacBDD.zip ; \
 	unzip -n ./dist/CacBDD.zip -d ./dist/cpp/ ; \
 	patch ./dist/cpp/Makefile ./CacBDD-Makefile.patch ; \
+	patch ./dist/cpp/Manager.cpp ./CacBDD-Manager.cpp.patch ; \
 	fi ;
 
 cppbuild:

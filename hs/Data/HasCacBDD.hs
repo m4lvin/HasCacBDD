@@ -41,7 +41,7 @@ foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not   
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Xor"    bdd_Operator_Xor    :: Bdd -> Bdd -> Bdd -> IO Bdd
--- foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd -- disabled because CacBDD seems to do something else here.
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd -- only use this with a patched CacBDD, see CacBDD-Manager.cpp.patch.
 foreign import ccall unsafe "BDDNodeC.h BDD_Exist"           bdd_Exist           :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Universal"       bdd_Universal       :: Bdd -> Bdd -> Bdd -> IO Bdd
 foreign import ccall unsafe "BDDNodeC.h BDD_Restrict"        bdd_Restrict        :: Bdd -> Bdd -> Bdd -> IO Bdd
@@ -120,10 +120,9 @@ equ :: Bdd -> Bdd -> Bdd
 equ b1 b2 = con (imp b1 b2) (imp b2 b1) -- ugly...
 {-# NOINLINE equ #-}
 
--- | Implication, for now implemented with disjunction and negation.
+-- | Implication
 imp :: Bdd -> Bdd -> Bdd
-imp b1 b2 = dis (neg b1) (b2)
--- imp b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
+imp b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
 {-# NOINLINE imp #-}
 
 -- | Conjunction
