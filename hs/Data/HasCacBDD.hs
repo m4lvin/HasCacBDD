@@ -7,7 +7,7 @@ module Data.HasCacBDD (
   -- * Creation of new BDDs
   top, bot, var,
   -- * Combination and Manipulation of BDDs
-  neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
+  neg, con, dis, imp, impSlow, equ, xor, conSet, disSet, xorSet,
   exists, forall, forallSet, existsSet,
   restrict, restrictSet,
   ifthenelse, gfp, relabel,
@@ -120,10 +120,16 @@ equ :: Bdd -> Bdd -> Bdd
 equ b1 b2 = con (imp b1 b2) (imp b2 b1) -- ugly...
 {-# NOINLINE equ #-}
 
--- | Implication
+-- | Implication, via disjunction and negation.
+-- Somehow this is faster than calling LessEqual?
 imp :: Bdd -> Bdd -> Bdd
-imp b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
+imp b1 b2 = dis (neg b1) (b2)
 {-# NOINLINE imp #-}
+
+-- | Implication, computed with IteRecur
+impSlow :: Bdd -> Bdd -> Bdd
+impSlow b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
+{-# NOINLINE impSlow #-}
 
 -- | Conjunction
 con :: Bdd -> Bdd -> Bdd
