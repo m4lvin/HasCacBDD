@@ -56,13 +56,13 @@ manager = unsafePerformIO (xBddManager_new 1048576) -- fix the number of variabl
 -- | Restrict a given variable to a given value
 restrict :: Bdd -> (Int,Bool) -> Bdd
 restrict b (n,bit) = unsafePerformIO $ bdd_Restrict (unsafePerformIO (bdd_new 8)) b res where
-  res = if bit then (var n) else neg (var n)
+  res = if bit then var n else neg (var n)
 {-# NOINLINE restrict #-}
 
 -- | Restrict several variables to given values
 restrictSet :: Bdd -> [(Int,Bool)] -> Bdd
 restrictSet b bits = unsafePerformIO $ bdd_Restrict (unsafePerformIO (bdd_new 8)) b res where
-  res = conSet $ map (\(n,bit) -> if bit then (var n) else neg (var n)) bits
+  res = conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits
 {-# NOINLINE restrictSet #-}
 
 -- | Existential Quantification
@@ -123,7 +123,7 @@ equ b1 b2 = con (imp b1 b2) (imp b2 b1) -- ugly...
 -- | Implication, via disjunction and negation.
 -- Somehow this is faster than calling LessEqual?
 imp :: Bdd -> Bdd -> Bdd
-imp b1 b2 = dis (neg b1) (b2)
+imp b1 = dis (neg b1)
 {-# NOINLINE imp #-}
 
 -- | Implication, computed with IteRecur
@@ -150,7 +150,7 @@ xor b1 b2 = unsafePerformIO (bdd_Operator_Xor (unsafePerformIO (bdd_new 8)) b1 b
 conSet :: [Bdd] -> Bdd
 conSet [] = top
 conSet (b:bs) =
-  if elem bot (b:bs)
+  if bot `elem` (b:bs)
     then bot
     else foldl con b bs
 {-# NOINLINE conSet #-}
@@ -159,7 +159,7 @@ conSet (b:bs) =
 disSet :: [Bdd] -> Bdd
 disSet [] = bot
 disSet (b:bs) =
-  if elem top (b:bs)
+  if top `elem` (b:bs)
     then top
     else foldl dis b bs
 {-# NOINLINE disSet #-}
@@ -175,7 +175,7 @@ gfp :: (Bdd -> Bdd) -> Bdd
 gfp operator = gfpStep top (operator top) where
   gfpStep :: Bdd -> Bdd -> Bdd
   gfpStep current next =
-    if (current == next)
+    if current == next
       then current
       else gfpStep next (operator next)
 
@@ -187,11 +187,11 @@ elseOf b = unsafePerformIO (bdd_Else (unsafePerformIO (bdd_new 8)) b)
 
 firstVarOf :: Bdd -> Maybe Int
 firstVarOf b
-  | (b == bot) = Nothing
-  | (b == top) = Nothing
+  | b == bot = Nothing
+  | b == top = Nothing
   | otherwise = unsafePerformIO $ do
       v <- bdd_Variable b
-      return $ Just ((fromIntegral v)-(1::Int))
+      return $ Just (fromIntegral v -(1::Int))
 
 instance Show Bdd where
   show b = show (unravel b)
@@ -202,8 +202,8 @@ data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
 -- | Convert a BDD to a tree.
 unravel :: Bdd -> BddTree
 unravel b
-  | (b == bot) = Bot
-  | (b == top) = Top
+  | b == bot = Bot
+  | b == top = Top
   | otherwise = Var n (unravel (thenOf b)) (unravel (elseOf b)) where (Just n) = firstVarOf b
 
 -- | Convert a tree to a BDD.
@@ -219,8 +219,8 @@ type Assignment = [(Int,Bool)]
 -- contain (a subset of) the variables that actually occur in the BDD.
 allSats :: Bdd -> [Assignment]
 allSats b
-  | (b == bot) = []
-  | (b == top) = [ [] ]
+  | b == bot = []
+  | b == top = [ [] ]
   | otherwise =
       [ (n,True):rest | rest <- allSats (thenOf b) ] ++ [ (n,False):rest | rest <- allSats (elseOf b) ]
       where (Just n) = firstVarOf b
@@ -228,8 +228,8 @@ allSats b
 -- | Get the lexicographically smallest satisfying assignment, if there is any.
 anySat :: Bdd -> Maybe Assignment
 anySat b
-  | (b == bot) = Nothing
-  | (b == top) = Just []
+  | b == bot = Nothing
+  | b == top = Just []
   | otherwise = Just ((n,hastobetrue):rest) where
       hastobetrue = elseOf b == bot
       (Just n)    = firstVarOf b
@@ -238,17 +238,17 @@ anySat b
 -- | Given a set of all variables, complete an assignment.
 completeAss :: [Int] -> Assignment -> [Assignment]
 completeAss allvars ass =
-  if (addvars ass == [])
+  if null (addvars ass)
     then [ass]
-    else concat $ map (completeAss allvars) (extend ass (head (addvars ass)))
+    else concatMap (completeAss allvars) (extend ass (head (addvars ass)))
   where
-    addvars s = allvars \\ (sort $ map fst s)
-    extend s v = [ ((v,False):s), ((v,True):s) ]
+    addvars s = allvars \\ sort (map fst s)
+    extend s v = [ (v,False):s, (v,True):s ]
 
 -- | Get all complete assignments, given a set of all variables.
 -- In particular this will include variables not in the BDD.
 allSatsWith :: [Int] -> Bdd -> [Assignment]
-allSatsWith allvars b = concat $ map (completeAss allvars) (allSats b) where
+allSatsWith allvars b = concatMap (completeAss allvars) (allSats b) where
 
 -- | Given a set of all variables, get the number of satisfying assignments.
 -- This should better be done without actually generating them.
@@ -258,7 +258,7 @@ satCountWith allvars b = length (allSatsWith allvars b)
 -- | Given a set of all variables, get the lexicographically smallest complete
 -- satisfying assignment, if there is any.
 anySatWith :: [Int] -> Bdd -> Maybe Assignment
-anySatWith allvars b = case (anySat b) of
+anySatWith allvars b = case anySat b of
   Nothing -> Nothing
   Just partass -> Just $ head $ completeAss allvars partass
 
@@ -272,6 +272,6 @@ relabelTree :: [(Int,Int)] -> BddTree -> BddTree
 relabelTree _   Top = Top
 relabelTree _   Bot = Bot
 relabelTree rel (Var n left right) = Var newn (relabelTree rel left) (relabelTree rel right) where
-  newn = case (lookup n rel) of
+  newn = case lookup n rel of
 	      (Just m) -> m
 	      Nothing  -> n
