@@ -14,7 +14,7 @@ module Data.HasCacBDD (
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel, firstVarOf
+  BddTree(..), unravel, ravel, firstVarOf, maxVarOf
 ) where
 
 import Data.Word
@@ -192,6 +192,16 @@ firstVarOf b
   | otherwise = unsafePerformIO $ do
       v <- bdd_Variable b
       return $ Just (fromIntegral v -(1::Int))
+
+maxVarOf ::  Bdd -> Maybe Int
+maxVarOf b
+  | b == bot = Nothing
+  | b == top = Nothing
+  | otherwise = unsafePerformIO $ do
+      let m1 = maxVarOf $ thenOf b
+      let m2 = maxVarOf $ elseOf b
+      v <- bdd_Variable b
+      return $ maximum [ Just $ fromIntegral v - (1::Int), m1, m2 ]
 
 instance Show Bdd where
   show b = show (unravel b)
