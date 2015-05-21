@@ -7,7 +7,7 @@ module Data.HasCacBDD (
   -- * Creation of new BDDs
   top, bot, var,
   -- * Combination and Manipulation of BDDs
-  neg, con, dis, imp, impSlow, equ, xor, conSet, disSet, xorSet,
+  neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
   exists, forall, forallSet, existsSet,
   restrict, restrictSet,
   ifthenelse, gfp, relabel,
@@ -19,35 +19,64 @@ module Data.HasCacBDD (
 
 import Data.Word
 import Foreign.C
-import Foreign.Ptr
+import Foreign.Ptr ( Ptr )
+import Foreign ( ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree )
 import System.IO.Unsafe
 import Data.List
 
--- | This datatype for Binary Decision diagrams has no internal structure
--- because from our perspective BDDs are just pointers.
-newtype Bdd = Bdd (Ptr Bdd)
+-- | The CacBDD datatype has no structure because
+-- from our perspective BDDs are just pointers.
+type CacBDD = ()
+data Bdd = Bdd (ForeignPtr CacBDD)
+
+-- | We attach the free() finalizer to our BDDs.
+finalize :: Ptr CacBDD -> Bdd
+finalize ptr = Bdd (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
 newtype XBddManager = XBddManager (Ptr XBddManager) deriving (Show)
 
-foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO XBddManager
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: Bdd -> XBddManager -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: Bdd -> XBddManager -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Bdd -> XBddManager -> CInt -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Bdd -> XBddManager -> Bdd -> Bdd -> Bdd -> IO Bdd
+type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
+type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Bdd -> Bdd -> IO Bool
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Xor"    bdd_Operator_Xor    :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Operator_LessEqual" bdd_Operator_LessEqual :: Bdd -> Bdd -> Bdd -> IO Bdd -- only use this with a patched CacBDD, see CacBDD-Manager.cpp.patch.
-foreign import ccall unsafe "BDDNodeC.h BDD_Exist"           bdd_Exist           :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Universal"       bdd_Universal       :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Restrict"        bdd_Restrict        :: Bdd -> Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable        :: Bdd -> IO CInt
-foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: Bdd -> Bdd -> IO Bdd
-foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: Bdd -> Bdd -> IO Bdd
+foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO XBddManager
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> XBddManager -> CInt -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> XBddManager -> BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Ptr CacBDD -> Ptr CacBDD -> IO Bool
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: UnaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Xor"    bdd_Operator_Xor    :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Exist"           bdd_Exist           :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Universal"       bdd_Universal       :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Restrict"        bdd_Restrict        :: BinaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable        :: Ptr CacBDD -> IO CInt
+foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: UnaryOp
+foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: UnaryOp
+
+withBDD :: UnaryOp -> Bdd -> Bdd
+withBDD unioperator (Bdd fptr) = finalize $ unsafePerformIO $
+  withForeignPtr fptr $ unioperator (unsafePerformIO (bdd_new 8))
+{-# NOINLINE withBDD #-}
+
+withTwoBDDs :: BinaryOp -> Bdd -> Bdd -> Bdd
+withTwoBDDs binoperator (Bdd fptr1) (Bdd fptr2) = finalize $ unsafePerformIO $
+  withForeignPtr fptr1 $
+    withForeignPtr fptr2 . binoperator (unsafePerformIO (bdd_new 8))
+{-# NOINLINE withTwoBDDs #-}
+
+fromBDD :: (Ptr CacBDD -> IO a) -> Bdd -> a
+fromBDD property (Bdd fptr1) = unsafePerformIO $
+  withForeignPtr fptr1 property
+{-# NOINLINE fromBDD #-}
+
+fromTwoBDDs :: (Ptr CacBDD -> Ptr CacBDD -> IO a) -> Bdd -> Bdd -> a
+fromTwoBDDs binproperty (Bdd fptr1) (Bdd fptr2) = unsafePerformIO $
+  withForeignPtr fptr1 $
+    withForeignPtr fptr2 . binproperty
+{-# NOINLINE fromTwoBDDs #-}
 
 manager :: XBddManager
 manager = unsafePerformIO (xBddManager_new 1048576) -- fix the number of variables
@@ -55,24 +84,22 @@ manager = unsafePerformIO (xBddManager_new 1048576) -- fix the number of variabl
 
 -- | Restrict a given variable to a given value
 restrict :: Bdd -> (Int,Bool) -> Bdd
-restrict b (n,bit) = unsafePerformIO $ bdd_Restrict (unsafePerformIO (bdd_new 8)) b res where
-  res = if bit then var n else neg (var n)
+restrict b (n,bit) = withTwoBDDs bdd_Restrict b (if bit then var n else neg (var n))
 {-# NOINLINE restrict #-}
 
 -- | Restrict several variables to given values
 restrictSet :: Bdd -> [(Int,Bool)] -> Bdd
-restrictSet b bits = unsafePerformIO $ bdd_Restrict (unsafePerformIO (bdd_new 8)) b res where
-  res = conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits
+restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits)
 {-# NOINLINE restrictSet #-}
 
 -- | Existential Quantification
 exists :: Int -> Bdd -> Bdd
-exists n b = unsafePerformIO $ bdd_Exist (unsafePerformIO (bdd_new 8)) b (var n)
+exists n b = withTwoBDDs bdd_Exist b (var n)
 {-# NOINLINE exists #-}
 
 -- | Universal Quantification
 forall :: Int -> Bdd -> Bdd
-forall n b = unsafePerformIO $ bdd_Universal (unsafePerformIO (bdd_new 8)) b (var n)
+forall n b = withTwoBDDs bdd_Universal b (var n)
 {-# NOINLINE forall #-}
 
 -- | Big Existential Quantification
@@ -85,34 +112,37 @@ forallSet ns b = foldl (flip forall) b ns
 
 -- | True constant
 top :: Bdd
-top = unsafePerformIO (xBddManager_BddOne (unsafePerformIO (bdd_new 8)) manager)
+top = finalize $ unsafePerformIO (xBddManager_BddOne (unsafePerformIO (bdd_new 8)) manager)
 {-# NOINLINE top #-}
 
 -- | False constant
 bot :: Bdd
-bot = unsafePerformIO (xBddManager_BddZero (unsafePerformIO (bdd_new 8)) manager)
+bot = finalize $ unsafePerformIO (xBddManager_BddZero (unsafePerformIO (bdd_new 8)) manager)
 {-# NOINLINE bot #-}
 
 -- | Variable, indexed by any integer from 0 to 1.000.000
 var :: Int -> Bdd
-var n = unsafePerformIO (xBddManager_BddVar (unsafePerformIO (bdd_new 8)) manager (fromIntegral (n+1)))
+var n = finalize $ unsafePerformIO (xBddManager_BddVar (unsafePerformIO (bdd_new 8)) manager (fromIntegral (n+1)))
 {-# NOINLINE var #-}
 
 -- | If ... then ... else ...
 ifthenelse :: Bdd -> Bdd -> Bdd -> Bdd
-ifthenelse test yes no = unsafePerformIO (xBddManager_Ite (unsafePerformIO (bdd_new 8)) manager test yes no)
+ifthenelse (Bdd test) (Bdd yes) (Bdd no) = finalize $ unsafePerformIO $
+  withForeignPtr test (\t ->
+    withForeignPtr yes $
+      withForeignPtr no . xBddManager_Ite (unsafePerformIO (bdd_new 8)) manager t)
 {-# NOINLINE ifthenelse #-}
 
 instance Eq Bdd where
   b1 == b2 = same b1 b2
 
 same :: Bdd -> Bdd -> Bool
-same b1 b2 = unsafePerformIO (bdd_Operator_Equal b1 b2)
+same = fromTwoBDDs bdd_Operator_Equal
 {-# NOINLINE same #-}
 
 -- | Negation
 neg :: Bdd -> Bdd
-neg b = unsafePerformIO (bdd_Operator_Not (unsafePerformIO (bdd_new 8)) b)
+neg = withBDD bdd_Operator_Not
 {-# NOINLINE neg #-}
 
 -- | Equivalence aka Biimplication
@@ -126,24 +156,19 @@ imp :: Bdd -> Bdd -> Bdd
 imp b1 = dis (neg b1)
 {-# NOINLINE imp #-}
 
--- | Implication, computed with IteRecur
-impSlow :: Bdd -> Bdd -> Bdd
-impSlow b1 b2 = unsafePerformIO (bdd_Operator_LessEqual (unsafePerformIO (bdd_new 8)) b1 b2)
-{-# NOINLINE impSlow #-}
-
 -- | Conjunction
 con :: Bdd -> Bdd -> Bdd
-con b1 b2 = unsafePerformIO (bdd_Operator_And (unsafePerformIO (bdd_new 8)) b1 b2)
+con = withTwoBDDs bdd_Operator_And
 {-# NOINLINE con #-}
 
 -- | Disjunction
 dis :: Bdd -> Bdd -> Bdd
-dis b1 b2 = unsafePerformIO (bdd_Operator_Or (unsafePerformIO (bdd_new 8)) b1 b2)
+dis = withTwoBDDs bdd_Operator_Or
 {-# NOINLINE dis #-}
 
 -- | Exclusive Or
 xor :: Bdd -> Bdd -> Bdd
-xor b1 b2 = unsafePerformIO (bdd_Operator_Xor (unsafePerformIO (bdd_new 8)) b1 b2)
+xor = withTwoBDDs bdd_Operator_Xor
 {-# NOINLINE xor #-}
 
 -- | Big Conjunction
@@ -180,28 +205,25 @@ gfp operator = gfpStep top (operator top) where
       else gfpStep next (operator next)
 
 thenOf :: Bdd -> Bdd
-thenOf b = unsafePerformIO (bdd_Then (unsafePerformIO (bdd_new 8)) b)
+thenOf = withBDD bdd_Then
 
 elseOf :: Bdd -> Bdd
-elseOf b = unsafePerformIO (bdd_Else (unsafePerformIO (bdd_new 8)) b)
+elseOf = withBDD bdd_Else
 
 firstVarOf :: Bdd -> Maybe Int
 firstVarOf b
   | b == bot = Nothing
   | b == top = Nothing
-  | otherwise = unsafePerformIO $ do
-      v <- bdd_Variable b
-      return $ Just (fromIntegral v -(1::Int))
+  | otherwise = Just (fromIntegral (fromBDD bdd_Variable b) -(1::Int))
 
 maxVarOf ::  Bdd -> Maybe Int
 maxVarOf b
   | b == bot = Nothing
   | b == top = Nothing
-  | otherwise = unsafePerformIO $ do
-      let m1 = maxVarOf $ thenOf b
-      let m2 = maxVarOf $ elseOf b
-      v <- bdd_Variable b
-      return $ maximum [ Just $ fromIntegral v - (1::Int), m1, m2 ]
+  | otherwise = maximum [ Just $ fromIntegral v - (1::Int), m1, m2 ] where
+      v = fromBDD bdd_Variable b
+      m1 = maxVarOf $ thenOf b
+      m2 = maxVarOf $ elseOf b
 
 instance Show Bdd where
   show b = show (unravel b)
