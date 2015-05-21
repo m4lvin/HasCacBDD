@@ -3,7 +3,7 @@ C       = g++
 CFLAGS  = -g -c -shared -fPIC
 
 HS      = ghc
-HSFLAGS = -lstdc++ -Wall -fno-cse
+HSFLAGS = -lstdc++ -Wall -fno-cse -auto-all
 
 CABALFLAGS = --with-gcc=g++
 
@@ -39,7 +39,7 @@ cinstall:
 	ar rvs $(LIBDIR)$(LIBFILE) dist/cpp/*.o
 
 hsbuild:
-	cabal configure $(CABALFLAGS)
+	cabal configure --enable-library-profiling $(CABALFLAGS)
 	cabal build $(CABALFLAGS)
 
 hsinstall:
