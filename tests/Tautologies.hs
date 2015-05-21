@@ -4,33 +4,30 @@ import Control.Applicative
 import Data.HasCacBDD
 import Text.Printf
 import Test.QuickCheck
-
-tests :: [(String, IO ())]
-tests  = [ ("doubleNegation", quickCheck doubleNegation)
-	  ,("excludedMiddle", quickCheck excludedMiddle)
-	  ,("deMorganOne", quickCheck deMorganOne)
-	  ,("deMorganTwo", quickCheck deMorganTwo)
-	  ,("identityOne", quickCheck identityOne)
-	  ,("quantifierDuality", quickCheck quantifierDuality) ]
+import Test.QuickCheck.Test
+import Control.Monad
+import System.Exit
 
 main :: IO ()
-main  = mapM_ (\(s,a) -> printf "%-25s: " s >> a) tests
+main  = do
+  results <- mapM (\(s,a) -> printf "%-25s: " s >> a) tests
+  unless (all isSuccess results) exitFailure
 
-doubleNegation :: Bdd -> Bool
-doubleNegation b = neg (neg b) == b
-
-excludedMiddle :: Bdd -> Bool
-excludedMiddle b = b `dis` neg b == top
-
-deMorganOne :: Bdd -> Bdd -> Bool
-deMorganOne a b = neg (a `con` b) == (neg a `dis` neg b)
-
-deMorganTwo :: Bdd -> Bdd -> Bool
-deMorganTwo a b = neg (a `dis` b) == (neg a `con` neg b)
-
-identityOne :: Bdd -> Bdd -> Bdd -> Bdd -> Bool
-identityOne a b c d =
-  conSet [a,b,c] `imp` d  ==  disSet [neg a, neg b, neg c] `dis` d
+tests :: [(String, IO Result)]
+tests  =
+  [("selfEqual",      quickCheckResult (\b -> equ b b == top))
+  ,("doubleNegation", quickCheckResult (\b -> neg (neg b) == b))
+  ,("selfImp",        quickCheckResult (\b -> imp b b == top))
+  ,("selfEquiv",      quickCheckResult (\b -> equ b b == top))
+  ,("excludedMiddle", quickCheckResult (\b -> b `dis` neg b == top))
+  ,("deMorganOne",    quickCheckResult (\a b -> neg (a `con` b) == (neg a `dis` neg b)))
+  ,("deMorganTwo",    quickCheckResult (\a b -> neg (a `dis` b) == (neg a `con` neg b)))
+  ,("identityOne",    quickCheckResult (\a b c d  -> conSet [a,b,c] `imp` d  ==  disSet [neg a, neg b, neg c] `dis` d))
+  ,("conElim",        quickCheckResult (\a b -> imp (con a b) a == top))
+  ,("conElim3",       quickCheckResult (\a b c -> imp (conSet [a, b, c]) a == top))
+  ,("negNotEqual",    quickCheckResult (\b -> neg b /= b))
+  ,("quantifiers",    quickCheckResult quantifierDuality) ]
+  -- TODO: gfp
 
 maximumvar :: Int
 maximumvar = 100
