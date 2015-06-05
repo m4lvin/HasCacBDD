@@ -9,7 +9,7 @@ module Data.HasCacBDD (
   -- * Combination and Manipulation of BDDs
   neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
   exists, forall, forallSet, existsSet,
-  restrict, restrictSet,
+  restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel,
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
@@ -91,6 +91,11 @@ restrict b (n,bit) = withTwoBDDs bdd_Restrict b (if bit then var n else neg (var
 restrictSet :: Bdd -> [(Int,Bool)] -> Bdd
 restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits)
 {-# NOINLINE restrictSet #-}
+
+-- | Restrict with a law
+restrictLaw :: Bdd -> Bdd -> Bdd
+restrictLaw b law = withTwoBDDs bdd_Restrict b law
+{-# NOINLINE restrictLaw #-}
 
 -- | Existential Quantification
 exists :: Int -> Bdd -> Bdd

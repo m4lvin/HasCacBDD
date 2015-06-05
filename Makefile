@@ -3,7 +3,7 @@ C       = g++
 CFLAGS  = -g -c -shared -fPIC
 
 HS      = ghc
-HSFLAGS = -lstdc++ -Wall -fno-cse
+HSFLAGS = -lstdc++ -pgml g++ -Wall -fPIC -fno-full-laziness
 
 CABALFLAGS = --with-gcc=g++
 
