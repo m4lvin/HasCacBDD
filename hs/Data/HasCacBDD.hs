@@ -14,7 +14,9 @@ module Data.HasCacBDD (
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel, firstVarOf, maxVarOf
+  BddTree(..), unravel, ravel, firstVarOf, maxVarOf,
+  -- * Print some debugging information
+  showInfo
 ) where
 
 import Data.Word
@@ -23,6 +25,7 @@ import Foreign.Ptr ( Ptr )
 import Foreign ( ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree )
 import System.IO.Unsafe
 import Data.List
+import Data.Maybe (fromJust)
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -40,11 +43,13 @@ type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 
 foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO XBddManager
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: XBddManager -> IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> XBddManager -> CInt -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> XBddManager -> BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Ptr CacBDD -> Ptr CacBDD -> IO Bool
+
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: UnaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: BinaryOp
@@ -94,7 +99,7 @@ restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bi
 
 -- | Restrict with a law
 restrictLaw :: Bdd -> Bdd -> Bdd
-restrictLaw b law = withTwoBDDs bdd_Restrict b law
+restrictLaw = withTwoBDDs bdd_Restrict
 {-# NOINLINE restrictLaw #-}
 
 -- | Existential Quantification
@@ -299,16 +304,16 @@ anySatWith allvars b = case anySat b of
   Nothing -> Nothing
   Just partass -> Just $ head $ completeAss allvars partass
 
--- | Relabel variables according to the given mapping. Note that we
--- unravel the whole BDD, hence this is an expensive operation.
+-- | Relabel variables according to the given mapping.
 relabel :: [(Int,Int)] -> Bdd -> Bdd
-relabel mapping b = ravel $ relabelTree mapping (unravel b)
+relabel [] b = b
+relabel rel@((n,newn):rest) b
+  | b == bot = b
+  | b == top = b
+  | otherwise = case compare n (fromJust (firstVarOf b)) of
+		  LT -> relabel rest b
+		  EQ -> ifthenelse (var newn) (relabel rest (thenOf b)) (relabel rest (elseOf b))
+		  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
 
--- relabel variables
-relabelTree :: [(Int,Int)] -> BddTree -> BddTree
-relabelTree _   Top = Top
-relabelTree _   Bot = Bot
-relabelTree rel (Var n left right) = Var newn (relabelTree rel left) (relabelTree rel right) where
-  newn = case lookup n rel of
-	      (Just m) -> m
-	      Nothing  -> n
+showInfo :: IO ()
+showInfo = xBddManager_showInfo manager

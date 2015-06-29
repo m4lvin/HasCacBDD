@@ -60,3 +60,5 @@ BDD BDD_Operator_Nor(const BDD* this_ptr, const BDD* other) { return (BDD) (*thi
 BDD BDD_Operator_Nand(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr | *other); }
 
 BDD BDD_Operator_XNor(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr & *other); }
+
+void XBDDManager_ShowInfo(XBDDManager* this_ptr, double vtime) { return this_ptr->ShowInfo(); }
