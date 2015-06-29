@@ -3,8 +3,6 @@
 #include "BDDNode.h"
 #include <stdio.h>
 
-BDD* BDD_new_XManagerPDD(XManager* m, DD vNode) { return new BDD(m, vNode); }
-
 BDD* BDD_new() { return new BDD(); }
 
 int BDD_Variable(BDD* this_ptr) { return this_ptr->Variable(); }

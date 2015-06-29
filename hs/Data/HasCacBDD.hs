@@ -36,20 +36,24 @@ data Bdd = Bdd (ForeignPtr CacBDD)
 finalize :: Ptr CacBDD -> Bdd
 finalize ptr = Bdd (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
-newtype XBddManager = XBddManager (Ptr XBddManager) deriving (Show)
+finalizeMgr :: Ptr CacXBddManager -> XBddManager
+finalizeMgr ptr = XBddManager (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
+type CacXBddManager = ()
+data XBddManager = XBddManager (ForeignPtr CacXBddManager) deriving (Show)
+
+type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO (Ptr CacBDD)
 type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 
 foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO XBddManager
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: XBddManager -> IO ()
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: Ptr CacBDD -> XBddManager -> IO (Ptr CacBDD)
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> XBddManager -> CInt -> IO (Ptr CacBDD)
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> XBddManager -> BinaryOp
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: Ptr CacXBddManager -> IO ()
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: NullOp
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: NullOp
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> Ptr CacXBddManager -> BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Ptr CacBDD -> Ptr CacBDD -> IO Bool
-
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: UnaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Or"     bdd_Operator_Or     :: BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_And"    bdd_Operator_And    :: BinaryOp
@@ -60,6 +64,17 @@ foreign import ccall unsafe "BDDNodeC.h BDD_Restrict"        bdd_Restrict       
 foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable        :: Ptr CacBDD -> IO CInt
 foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: UnaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: UnaryOp
+
+manager :: XBddManager
+manager = finalizeMgr (unsafePerformIO $ xBddManager_new 1048576) -- fix the number of variables
+{-# NOINLINE manager #-}
+
+-- | This should cover BDDOne, BddZero
+fromManager :: NullOp -> Bdd
+fromManager nulloperator = let (XBddManager mptr) = manager in
+  finalize $ unsafePerformIO $
+    withForeignPtr mptr $ nulloperator (unsafePerformIO (bdd_new 8))
+{-# NOINLINE fromManager #-}
 
 withBDD :: UnaryOp -> Bdd -> Bdd
 withBDD unioperator (Bdd fptr) = finalize $ unsafePerformIO $
@@ -82,10 +97,6 @@ fromTwoBDDs binproperty (Bdd fptr1) (Bdd fptr2) = unsafePerformIO $
   withForeignPtr fptr1 $
     withForeignPtr fptr2 . binproperty
 {-# NOINLINE fromTwoBDDs #-}
-
-manager :: XBddManager
-manager = unsafePerformIO (xBddManager_new 1048576) -- fix the number of variables
-{-# NOINLINE manager #-}
 
 -- | Restrict a given variable to a given value
 restrict :: Bdd -> (Int,Bool) -> Bdd
@@ -122,26 +133,31 @@ forallSet ns b = foldl (flip forall) b ns
 
 -- | True constant
 top :: Bdd
-top = finalize $ unsafePerformIO (xBddManager_BddOne (unsafePerformIO (bdd_new 8)) manager)
+top = fromManager xBddManager_BddOne
 {-# NOINLINE top #-}
 
 -- | False constant
 bot :: Bdd
-bot = finalize $ unsafePerformIO (xBddManager_BddZero (unsafePerformIO (bdd_new 8)) manager)
+bot = fromManager xBddManager_BddZero
 {-# NOINLINE bot #-}
 
 -- | Variable, indexed by any integer from 0 to 1.000.000
 var :: Int -> Bdd
-var n = finalize $ unsafePerformIO (xBddManager_BddVar (unsafePerformIO (bdd_new 8)) manager (fromIntegral (n+1)))
+var n = fromManager (\bptr mptr -> xBddManager_BddVar bptr mptr (fromIntegral (n+1)))
 {-# NOINLINE var #-}
 
 -- | If ... then ... else ...
 ifthenelse :: Bdd -> Bdd -> Bdd -> Bdd
-ifthenelse (Bdd test) (Bdd yes) (Bdd no) = finalize $ unsafePerformIO $
-  withForeignPtr test (\t ->
-    withForeignPtr yes $
-      withForeignPtr no . xBddManager_Ite (unsafePerformIO (bdd_new 8)) manager t)
+ifthenelse (Bdd test) (Bdd yes) (Bdd no) =
+  let (XBddManager mptr) = manager in
+    finalize $ unsafePerformIO $
+      withForeignPtr test (\t ->
+	withForeignPtr yes (\y ->
+	  withForeignPtr no (\n ->
+	    withForeignPtr mptr (\m -> xBddManager_Ite (unsafePerformIO (bdd_new 8)) m t y n))))
 {-# NOINLINE ifthenelse #-}
+
+-- xBddManager_Ite :: Ptr CacBDD -> Ptr CacXBddManager -> Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 
 instance Eq Bdd where
   b1 == b2 = same b1 b2
@@ -316,4 +332,4 @@ relabel rel@((n,newn):rest) b
 		  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
 
 showInfo :: IO ()
-showInfo = xBddManager_showInfo manager
+showInfo = let (XBddManager mptr) = manager in withForeignPtr mptr $ xBddManager_showInfo

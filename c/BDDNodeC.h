@@ -3,7 +3,6 @@
 extern "C" {
 
 BDD* BDD_new();
-BDD* BDD_new_XManagerPDD(XManager* m, DD vNode);
 const XManager* BDD_checkSameManager(const BDD* this_ptr, const BDD* other);
 int BDD_Variable(BDD* this_ptr);
 BDD BDD_Then(const BDD* this_ptr);
@@ -28,8 +27,6 @@ BDD BDD_Operator_LessEqual (const BDD* this_ptr, const BDD* other); // <=
 BDD BDD_Operator_Nor       (const BDD* this_ptr, const BDD* other); // %
 BDD BDD_Operator_Nand      (const BDD* this_ptr, const BDD* other); // |
 BDD BDD_Operator_XNor      (const BDD* this_ptr, const BDD* other); // &
-
-DD BDD_Node(const BDD* this_ptr);
 
 XBDDManager* XBDDManager_new(int varCount);
 BDD XBDDManager_BddOne(XBDDManager* this_ptr);
