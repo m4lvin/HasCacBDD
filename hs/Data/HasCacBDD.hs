@@ -157,8 +157,6 @@ ifthenelse (Bdd test) (Bdd yes) (Bdd no) =
 	    withForeignPtr mptr (\m -> xBddManager_Ite (unsafePerformIO (bdd_new 8)) m t y n))))
 {-# NOINLINE ifthenelse #-}
 
--- xBddManager_Ite :: Ptr CacBDD -> Ptr CacXBddManager -> Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
-
 instance Eq Bdd where
   b1 == b2 = same b1 b2
 
@@ -236,12 +234,14 @@ thenOf = withBDD bdd_Then
 elseOf :: Bdd -> Bdd
 elseOf = withBDD bdd_Else
 
+-- | The first variable of a given BDD, if there is one.
 firstVarOf :: Bdd -> Maybe Int
 firstVarOf b
   | b == bot = Nothing
   | b == top = Nothing
   | otherwise = Just (fromIntegral (fromBDD bdd_Variable b) -(1::Int))
 
+-- | The maximum variable of a given BDD, if there is one.
 maxVarOf ::  Bdd -> Maybe Int
 maxVarOf b
   | b == bot = Nothing
@@ -251,6 +251,7 @@ maxVarOf b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
 
+-- | All variables in a given BDD.
 allVarsOf :: Bdd -> [Int]
 allVarsOf b
   | b == bot = []
@@ -260,7 +261,7 @@ allVarsOf b
 instance Show Bdd where
   show b = show (unravel b)
 
--- | A simple tree definition.
+-- | A simple tree definition to show BDDs as text.
 data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
 
 -- | Convert a BDD to a tree.
@@ -315,9 +316,16 @@ allSatsWith :: [Int] -> Bdd -> [Assignment]
 allSatsWith allvars b = concatMap (completeAss allvars) (allSats b) where
 
 -- | Given a set of all variables, get the number of satisfying assignments.
--- This should better be done without actually generating them.
+-- Note that allvars should be nub'd and sorted.
 satCountWith :: [Int] -> Bdd -> Int
-satCountWith allvars b = length (allSatsWith allvars b)
+satCountWith allvars b
+  | b == top = 2 ^ length allvars
+  | b == bot = 0
+  | otherwise = (2 ^ length varsjumped) * posbelow where
+      (Just curvar) = firstVarOf b
+      varsjumped = filter (< curvar) allvars
+      varsleft   = filter (> curvar) allvars
+      posbelow   = sum [satCountWith varsleft (branch b) | branch <- [thenOf,elseOf] ]
 
 -- | Given a set of all variables, get the lexicographically smallest complete
 -- satisfying assignment, if there is any.
@@ -337,5 +345,6 @@ relabel rel@((n,newn):rest) b
 		  EQ -> ifthenelse (var newn) (relabel rest (thenOf b)) (relabel rest (elseOf b))
 		  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
 
+-- | Show internal statistics.
 showInfo :: IO ()
-showInfo = let (XBddManager mptr) = manager in withForeignPtr mptr xBddManager_showInfo
+showInfo = withForeignPtr mptr xBddManager_showInfo where (XBddManager mptr) = manager
