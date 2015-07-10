@@ -14,7 +14,7 @@ module Data.HasCacBDD (
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel, firstVarOf, maxVarOf, thenOf, elseOf,
+  BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
   -- * Print some debugging information
   showInfo
 ) where
@@ -251,6 +251,12 @@ maxVarOf b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
 
+allVarsOf :: Bdd -> [Int]
+allVarsOf b
+  | b == bot = []
+  | b == top = []
+  | otherwise = nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
+
 instance Show Bdd where
   show b = show (unravel b)
 
@@ -332,4 +338,4 @@ relabel rel@((n,newn):rest) b
 		  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
 
 showInfo :: IO ()
-showInfo = let (XBddManager mptr) = manager in withForeignPtr mptr $ xBddManager_showInfo
+showInfo = let (XBddManager mptr) = manager in withForeignPtr mptr xBddManager_showInfo
