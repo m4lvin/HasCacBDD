@@ -14,7 +14,7 @@ module Data.HasCacBDD (
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel, firstVarOf, maxVarOf,
+  BddTree(..), unravel, ravel, firstVarOf, maxVarOf, thenOf, elseOf,
   -- * Print some debugging information
   showInfo
 ) where
