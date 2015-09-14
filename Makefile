@@ -12,7 +12,7 @@ LIBFILE = libBDDNodeC.a
 
 default:
 	@echo "You probably want to type 'make all' which will"
-	@echo "1) Download CacBDD from http://kailesu.net/CacBDD/CacBDD.zip"
+	@echo "1) Download CacBDD from http://www.kailesu.net/CacBDD/CacBDD1.01.zip"
 	@echo "2) Install a C-wrapped version of CacBDD to $(LIBDIR)"
 	@echo "3) Install Data.HasCacBDD  with cabal."
 	@echo "For more details look at the Makefile."
@@ -20,10 +20,9 @@ default:
 getcpp:
 	mkdir -p ./dist/cpp
 	if [ ! -f ./dist/cpp/BDDNode.h ] ; \
-	then wget -c http://kailesu.net/CacBDD/CacBDD.zip -O ./dist/CacBDD.zip ; \
-	unzip -n ./dist/CacBDD.zip -d ./dist/cpp/ ; \
+	then wget -c http://www.kailesu.net/CacBDD/CacBDD1.01.zip -O ./dist/CacBDD1.01.zip ; \
+	unzip -n ./dist/CacBDD1.01.zip -d ./dist/cpp/ ; \
 	patch ./dist/cpp/Makefile ./CacBDD-Makefile.patch ; \
-	patch ./dist/cpp/Manager.cpp ./CacBDD-Manager.cpp.patch ; \
 	fi ;
 
 cppbuild:
