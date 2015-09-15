@@ -16,16 +16,18 @@ module Data.HasCacBDD (
   -- * Show and convert to trees
   BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
   -- * Print some debugging information
-  showInfo
+  maximumvar, showInfo
 ) where
 
+import Control.Applicative
 import Data.Word
 import Foreign.C
-import Foreign.Ptr ( Ptr )
-import Foreign ( ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree )
+import Foreign.Ptr (Ptr)
+import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe
 import Data.List
 import Data.Maybe (fromJust)
+import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, elements, oneof, sized)
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -65,8 +67,12 @@ foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable       
 foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: UnaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: UnaryOp
 
+-- | The maximum number of variables
+maximumvar :: Int
+maximumvar = 1048576
+
 manager :: XBddManager
-manager = finalizeMgr (unsafePerformIO $ xBddManager_new 1048576) -- fix the number of variables
+manager = finalizeMgr (unsafePerformIO $ xBddManager_new (fromIntegral maximumvar))
 {-# NOINLINE manager #-}
 
 -- | This should cover BDDOne, BddZero
@@ -348,3 +354,27 @@ relabel rel@((n,newn):rest) b
 -- | Show internal statistics.
 showInfo :: IO ()
 showInfo = withForeignPtr mptr xBddManager_showInfo where (XBddManager mptr) = manager
+
+-- | QuickCheck Arbitrary instances for BDDs
+instance Arbitrary Bdd where
+  arbitrary = sized randombdd
+
+randombdd ::  Int -> Gen Bdd
+randombdd sz = bdd sz' where
+  sz' = min maximumvar sz
+  bdd 0 = var <$> choose (0, sz')
+  bdd n = oneof [  pure top
+		  , pure bot
+		  , var <$> choose (0, sz')
+		  , neg <$> st
+		  , con <$> st <*> st
+		  , dis <$> st <*> st
+		  , imp <$> st <*> st
+		  , equ <$> st <*> st
+		  , xor <$> st <*> st
+		  , exists <$> randomvar <*> st
+		  , forall <$> randomvar <*> st
+		  ]
+    where
+      st = bdd (n `div` 2)
+      randomvar = elements [0..maximumvar]

@@ -26,39 +26,9 @@ tests  =
   ,("conElim",        quickCheckResult (\a b -> imp (con a b) a == top))
   ,("conElim3",       quickCheckResult (\a b c -> imp (conSet [a, b, c]) a == top))
   ,("negNotEqual",    quickCheckResult (\b -> neg b /= b))
-  ,("quantifiers",    quickCheckResult quantifierDuality) ]
+  ,("quantifiers",    quickCheckResult (forAll (elements [0..maximumvar]) quantifierDuality))
   -- TODO: gfp
+  ]
 
-maximumvar :: Int
-maximumvar = 100
-
-data VarInt = VarInt Int deriving Show
-
-instance Arbitrary VarInt where
-  arbitrary = VarInt <$> elements [0..maximumvar]
-
-quantifierDuality :: VarInt -> Bdd -> Bool
-quantifierDuality vi b = forall n b == neg (exists n (neg b)) where (VarInt n) = vi
-
-instance Arbitrary Bdd where
-  arbitrary = sized randombdd
-
-randombdd ::  Int -> Gen Bdd
-randombdd sz = bdd' sz' where
-  sz' = min maximumvar sz
-  bdd' 0 = var <$> choose (0, sz')
-  bdd' n = oneof [  pure top
-		  , pure bot
-		  , var <$> choose (0, sz')
-		  , neg <$> st
-		  , con <$> st <*> st
-		  , dis <$> st <*> st
-		  , imp <$> st <*> st
-		  , equ <$> st <*> st
-		  , xor <$> st <*> st
-		  , exists <$> randomvar <*> st
-		  , forall <$> randomvar <*> st
-		  ]
-    where
-      st = bdd' (n `div` 2)
-      randomvar = elements [0..maximumvar]
+quantifierDuality :: Int -> Bdd -> Bool
+quantifierDuality n b = forall n b == neg (exists n (neg b))
