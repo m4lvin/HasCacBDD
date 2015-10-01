@@ -18,29 +18,29 @@ genGraph myb
       (links,topdone) = genGraphStep [] myb
       genGraphStep :: [(Bdd,Int)] -> Bdd -> (String,[(Bdd,Int)])
       genGraphStep done curB = case (lookup curB done, curB == top || curB == bot) of
-	(_     ,True) -> ("",done)
-	(Just _, _) -> ("",done)
-	(Nothing,False) ->
-	    let
-	      thisn = if null done then 0 else maximum (map snd done) + 1
-	      thisnstr = show thisn
-	      (Just thisvar) = firstVarOf curB
-	      out1  = "n" ++ thisnstr ++ " [label=\"" ++ show thisvar ++ "\",shape=\"circle\"];\n"
-	      lhs   = thenOf curB
-	      (lhsoutput,lhsdone) = genGraphStep ((curB,thisn):done) lhs
-	      (Just leftn) = lookup lhs lhsdone
-	      out2
-		| lhs == top = "n"++ thisnstr ++" -> Top;\n"
-		| lhs == bot = "n"++ thisnstr ++" -> Bot;\n"
-		| otherwise  = "n"++ thisnstr ++" -> n" ++ show leftn ++";\n" ++ lhsoutput
-	      rhs   = elseOf curB
-	      (rhsoutput,rhsdone) = genGraphStep lhsdone rhs
-	      (Just rightn) = lookup rhs rhsdone
-	      out3
-		| rhs == top = "n"++ thisnstr ++" -> Top [style=dashed];\n"
-		| rhs == bot = "n"++ thisnstr ++" -> Bot [style=dashed];\n"
-		| otherwise  = "n"++ thisnstr ++" -> n"++ show rightn ++" [style=dashed];\n" ++ rhsoutput
-	    in (out1 ++ out2 ++ out3, rhsdone)
+        (_     ,True) -> ("",done)
+        (Just _, _) -> ("",done)
+        (Nothing,False) ->
+            let
+              thisn = if null done then 0 else maximum (map snd done) + 1
+              thisnstr = show thisn
+              (Just thisvar) = firstVarOf curB
+              out1  = "n" ++ thisnstr ++ " [label=\"" ++ show thisvar ++ "\",shape=\"circle\"];\n"
+              lhs   = thenOf curB
+              (lhsoutput,lhsdone) = genGraphStep ((curB,thisn):done) lhs
+              (Just leftn) = lookup lhs lhsdone
+              out2
+                | lhs == top = "n"++ thisnstr ++" -> Top;\n"
+                | lhs == bot = "n"++ thisnstr ++" -> Bot;\n"
+                | otherwise  = "n"++ thisnstr ++" -> n" ++ show leftn ++";\n" ++ lhsoutput
+              rhs   = elseOf curB
+              (rhsoutput,rhsdone) = genGraphStep lhsdone rhs
+              (Just rightn) = lookup rhs rhsdone
+              out3
+                | rhs == top = "n"++ thisnstr ++" -> Top [style=dashed];\n"
+                | rhs == bot = "n"++ thisnstr ++" -> Bot [style=dashed];\n"
+                | otherwise  = "n"++ thisnstr ++" -> n"++ show rightn ++" [style=dashed];\n" ++ rhsoutput
+            in (out1 ++ out2 ++ out3, rhsdone)
       sinks = "Bot [label=\"0\",shape=\"box\"];\n" ++ "Top [label=\"1\",shape=\"box\"];\n"
       rankings = concat [ "{ rank=same; "++ unwords (nodesOf v) ++ " }\n" | v <- allVarsOf myb ]
       nodesOf v = map (("n"++).show.snd) $ filter ( \(b,_) -> firstVarOf b == Just v ) topdone

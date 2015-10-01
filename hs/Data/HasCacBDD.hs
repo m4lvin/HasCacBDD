@@ -19,13 +19,11 @@ module Data.HasCacBDD (
   maximumvar, showInfo
 ) where
 
-import Control.Applicative
-import Data.Word
 import Foreign.C
 import Foreign.Ptr (Ptr)
 import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe
-import Data.List
+import Data.List (nub,(\\),sort)
 import Data.Maybe (fromJust)
 import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, elements, oneof, sized)
 
@@ -158,9 +156,9 @@ ifthenelse (Bdd test) (Bdd yes) (Bdd no) =
   let (XBddManager mptr) = manager in
     finalize $ unsafePerformIO $
       withForeignPtr test (\t ->
-	withForeignPtr yes (\y ->
-	  withForeignPtr no (\n ->
-	    withForeignPtr mptr (\m -> xBddManager_Ite (unsafePerformIO (bdd_new 8)) m t y n))))
+        withForeignPtr yes (\y ->
+          withForeignPtr no (\n ->
+            withForeignPtr mptr (\m -> xBddManager_Ite (unsafePerformIO (bdd_new 8)) m t y n))))
 {-# NOINLINE ifthenelse #-}
 
 instance Eq Bdd where
@@ -347,9 +345,9 @@ relabel rel@((n,newn):rest) b
   | b == bot = b
   | b == top = b
   | otherwise = case compare n (fromJust (firstVarOf b)) of
-		  LT -> relabel rest b
-		  EQ -> ifthenelse (var newn) (relabel rest (thenOf b)) (relabel rest (elseOf b))
-		  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
+                  LT -> relabel rest b
+                  EQ -> ifthenelse (var newn) (relabel rest (thenOf b)) (relabel rest (elseOf b))
+                  GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
 
 -- | Show internal statistics.
 showInfo :: IO ()
@@ -364,17 +362,17 @@ randombdd sz = bdd sz' where
   sz' = min maximumvar sz
   bdd 0 = var <$> choose (0, sz')
   bdd n = oneof [  pure top
-		  , pure bot
-		  , var <$> choose (0, sz')
-		  , neg <$> st
-		  , con <$> st <*> st
-		  , dis <$> st <*> st
-		  , imp <$> st <*> st
-		  , equ <$> st <*> st
-		  , xor <$> st <*> st
-		  , exists <$> randomvar <*> st
-		  , forall <$> randomvar <*> st
-		  ]
+                  , pure bot
+                  , var <$> choose (0, sz')
+                  , neg <$> st
+                  , con <$> st <*> st
+                  , dis <$> st <*> st
+                  , imp <$> st <*> st
+                  , equ <$> st <*> st
+                  , xor <$> st <*> st
+                  , exists <$> randomvar <*> st
+                  , forall <$> randomvar <*> st
+                  ]
     where
       st = bdd (n `div` 2)
       randomvar = elements [0..maximumvar]
