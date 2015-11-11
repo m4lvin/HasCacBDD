@@ -2,7 +2,8 @@
 
 module Data.HasCacBDD.Visuals (
   genGraph,
-  showGraph
+  showGraph,
+  svgGraph
 ) where
 
 import Data.HasCacBDD
@@ -54,3 +55,16 @@ showGraph b = do
   hClose inp
   _ <- waitForProcess pid
   return ()
+
+-- | Generate SVG of a BDD with dot.
+svgGraph :: Bdd -> IO String
+svgGraph b = do
+  (inp,out,_,pid) <- runInteractiveProcess "/usr/bin/dot" ["-Tsvg" ] Nothing Nothing
+  hPutStr inp (genGraph b)
+  hSetBinaryMode inp False
+  hSetBinaryMode out False
+  hFlush inp
+  hClose inp
+  outstring <- hGetContents out
+  _ <- waitForProcess pid
+  return $ (unlines.tail.lines) outstring
