@@ -42,7 +42,7 @@ hsbuild:
 	cabal build $(CABALFLAGS)
 
 hsinstall:
-	cabal install $(CABALFLAGS)
+	cabal install $(CABALFLAGS) --force-reinstalls
 
 example:
 	$(HS) $(HSFLAGS) example.hs -o dist/example

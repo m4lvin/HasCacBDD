@@ -13,6 +13,8 @@ module Data.HasCacBDD (
   ifthenelse, gfp, relabel,
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
+  -- * Sub-BDDs and length
+  subOf, sizeOf,
   -- * Show and convert to trees
   BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
   -- * Print some debugging information
@@ -25,7 +27,7 @@ import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe
 import Data.List (nub,(\\),sort)
 import Data.Maybe (fromJust)
-import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, elements, oneof, sized)
+import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, elements, oneof, sized, listOf)
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -40,7 +42,7 @@ finalizeMgr :: Ptr CacXBddManager -> XBddManager
 finalizeMgr ptr = XBddManager (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
 type CacXBddManager = ()
-data XBddManager = XBddManager (ForeignPtr CacXBddManager) deriving (Show)
+data XBddManager = XBddManager (ForeignPtr CacXBddManager)
 
 type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO (Ptr CacBDD)
 type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
@@ -260,7 +262,16 @@ allVarsOf :: Bdd -> [Int]
 allVarsOf b
   | b == bot = []
   | b == top = []
-  | otherwise = nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
+  | otherwise = sort $ nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
+
+subOf :: Bdd -> [Bdd]
+subOf b
+  | b == bot = []
+  | b == top = []
+  | otherwise = nub $ b : (subOf (thenOf b) ++ subOf (elseOf b))
+
+sizeOf :: Bdd -> Int
+sizeOf = length.subOf
 
 instance Show Bdd where
   show b = show (unravel b)
@@ -371,7 +382,9 @@ randombdd sz = bdd sz' where
                   , equ <$> st <*> st
                   , xor <$> st <*> st
                   , exists <$> randomvar <*> st
+                  , existsSet <$> listOf randomvar <*> st
                   , forall <$> randomvar <*> st
+                  , forallSet <$> listOf randomvar <*> st
                   ]
     where
       st = bdd (n `div` 2)
