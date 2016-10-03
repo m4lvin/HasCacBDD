@@ -328,7 +328,7 @@ completeAss allvars ass =
 -- | Get all complete assignments, given a set of all variables.
 -- In particular this will include variables not in the BDD.
 allSatsWith :: [Int] -> Bdd -> [Assignment]
-allSatsWith allvars b = concatMap (completeAss allvars) (allSats b) where
+allSatsWith allvars b = concatMap (completeAss allvars) (allSats b)
 
 -- | Given a set of all variables, get the number of satisfying assignments.
 -- Note that allvars should be nub'd and sorted.
