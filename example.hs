@@ -37,5 +37,6 @@ main = do
   print $ con (neg $ var 1) (neg $ var 2) == neg (dis (var 1) (var 2))
   putStrLn "\nThe example from CacBDDs main.cpp: (!x[4] + !x[6]) * (!x[3] + !x[6]) * (!x[2] + !x[5])"
   let cacExample = conSet [ dis (neg (var 4)) (neg (var 6)) , neg (var 3) `dis` neg (var 6), neg (var 2) `dis` neg (var 5) ]
+  print $ cacExample
   print $ cacExample == top
   putStrLn "Good Bye."

@@ -2,11 +2,6 @@
 C       = g++
 CFLAGS  = -g -c -shared -fPIC
 
-HS      = ghc
-HSFLAGS = -lstdc++ -pgml g++ -Wall -fPIC -fno-full-laziness
-
-CABALFLAGS = --with-gcc=g++
-
 LIBDIR = /usr/local/cacbdd/
 LIBFILE = libBDDNodeC.a
 
@@ -38,15 +33,11 @@ cinstall:
 	ar rvs $(LIBDIR)$(LIBFILE) dist/cpp/*.o
 
 hsbuild:
-	cabal configure $(CABALFLAGS)
-	cabal build $(CABALFLAGS)
-
-hsinstall:
-	cabal install $(CABALFLAGS) --force-reinstalls
+	stack build
 
 example:
-	$(HS) $(HSFLAGS) example.hs -o dist/example
-	dist/example
+	stack build
+	stack exec hascacbdd-example
 
 clean:
 	rm -rf dist/*
@@ -57,4 +48,3 @@ all:
 	make cbuild
 	sudo make cinstall
 	make hsbuild
-	make hsinstall

@@ -1,6 +1,6 @@
 name:                HasCacBDD
 version:             0.1.0.0
-synopsis:             Haskell bindings for CacBDD 
+synopsis:            Haskell bindings for CacBDD
 homepage:            https://github.com/m4lvin/HasCacBDD
 license:             GPL-2
 license-file:        LICENSE
@@ -32,6 +32,14 @@ library
   cc-options:          -fPIC -shared
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
 
+executable hascacbdd-example
+  default-language:    Haskell2010
+  main-is:             example.hs
+  build-depends:       base >=4.6,
+                       HasCacBDD,
+                       QuickCheck > 2.4
+  ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
+
 test-suite tautologies
   default-language:    Haskell2010
   type:                exitcode-stdio-1.0
@@ -40,5 +48,4 @@ test-suite tautologies
   build-depends:       base >=4.6,
                        HasCacBDD,
                        QuickCheck > 2.4
-  ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness -fhpc -fforce-recomp
-  cc-options:          -fPIC -shared
+  ghc-options:         -Wall -fhpc -fforce-recomp
