@@ -148,6 +148,8 @@ bot = fromManager xBddManager_BddZero
 {-# NOINLINE bot #-}
 
 -- | Variable, indexed by any integer from 0 to 1.000.000
+-- FIXME: Segfaults if n is negative or out of range.
+--        Can we add a safety check without affecting performance?
 var :: Int -> Bdd
 var n = fromManager (\bptr mptr -> xBddManager_BddVar bptr mptr (fromIntegral (n+1)))
 {-# NOINLINE var #-}
@@ -273,8 +275,11 @@ subOf b
 sizeOf :: Bdd -> Int
 sizeOf = length.subOf
 
+-- FIXME: Should we print outermost brackets around non-constant BDDs?
 instance Show Bdd where
   show b = show (unravel b)
+
+-- TODO: add a Read instance and test that Show and Read are inverses of each other
 
 -- | A simple tree definition to show BDDs as text.
 data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
@@ -371,21 +376,22 @@ instance Arbitrary Bdd where
 randombdd ::  Int -> Gen Bdd
 randombdd sz = bdd sz' where
   sz' = min maximumvar sz
-  bdd 0 = var <$> choose (0, sz')
-  bdd n = oneof [  pure top
-                  , pure bot
-                  , var <$> choose (0, sz')
-                  , neg <$> st
-                  , con <$> st <*> st
-                  , dis <$> st <*> st
-                  , imp <$> st <*> st
-                  , equ <$> st <*> st
-                  , xor <$> st <*> st
-                  , exists <$> randomvar <*> st
-                  , existsSet <$> listOf randomvar <*> st
-                  , forall <$> randomvar <*> st
-                  , forallSet <$> listOf randomvar <*> st
-                  ]
+  bdd 0 = oneof [ pure top
+                , pure bot
+                , var <$> choose (0, sz')
+                ]
+  bdd n = oneof [ var <$> choose (0, sz')
+                , neg <$> st
+                , con <$> st <*> st
+                , dis <$> st <*> st
+                , imp <$> st <*> st
+                , equ <$> st <*> st
+                , xor <$> st <*> st
+                , exists <$> randomvar <*> st
+                , existsSet <$> listOf randomvar <*> st
+                , forall <$> randomvar <*> st
+                , forallSet <$> listOf randomvar <*> st
+                ]
     where
       st = bdd (n `div` 2)
       randomvar = elements [0..maximumvar]
