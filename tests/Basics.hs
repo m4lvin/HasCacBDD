@@ -14,15 +14,18 @@ main = do
       putStrLn "FAILURES:"
       let failures = filter (not.snd) tests
       mapM_ (putStrLn . fst) failures
+      putStrLn "All results:"
+      mapM_ print tests
       exitFailure
 
 tests :: [(String,Bool)]
 tests =
-  [ ("bot == bot", bot == bot)
-  , ("top == top", top == top)
+  [ ("top == top", top == top)
+  , ("top /= bot", top /= bot)
+  , ("bot /= top", bot /= top)
+  , ("bot == bot", bot == bot)
   , ("neg bot == top", neg bot == top)
   , ("neg bot /= bot", neg bot /= bot)
-  , ("bot /= top", bot /= top)
   , ("var 1 == var 1", var 1 == var 1)
   , ("var 5 /= var 7", var 5 /= var 7)
   , ("var 3 == con (var 3) top", var 3 == con (var 3) top)
