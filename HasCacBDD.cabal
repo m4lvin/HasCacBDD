@@ -21,16 +21,38 @@ source-repository head
 library
   exposed-modules:     Data.HasCacBDD,
                        Data.HasCacBDD.Visuals
-  build-depends:       base >=4.6,
+  build-depends:       base >= 4.6 && < 5,
                        process >= 1.1,
                        QuickCheck
   default-language:    Haskell2010
   hs-source-dirs:      hs
-  extra-lib-dirs:      /usr/local/cacbdd
-  include-dirs:        /usr/local/cacbdd
-  extra-libraries:     stdc++, BDDNodeC
-  cc-options:          -fPIC -shared
+  include-dirs:        c cpp
+  extra-libraries:     stdc++
+  cc-options:          -g -c -fPIC -shared
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
+  c-sources:           c/BDDNodeC.cpp,
+                       cpp/BDDNode.cpp,
+                       cpp/BDDNode.h,
+                       cpp/CTable.cpp,
+                       cpp/CTable.h,
+                       cpp/DdNode.cpp,
+                       cpp/DdNode.h,
+                       cpp/Manager.cpp,
+                       cpp/Manager.h,
+                       cpp/UTable.cpp,
+                       cpp/UTable.h,
+                       cpp/Timer.h,
+                       cpp/Timer.cpp,
+                       cpp/Base.h,
+                       cpp/Base.cpp,
+                       cpp/XBits.h,
+                       cpp/XBits.cpp,
+                       cpp/XFunction.h,
+                       cpp/XFunction.cpp,
+                       cpp/XInts.h,
+                       cpp/XInts.cpp,
+                       cpp/XVector.h,
+                       cpp/XVector.cpp
 
 executable hascacbdd-example
   default-language:    Haskell2010
