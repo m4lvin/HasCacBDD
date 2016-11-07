@@ -41,9 +41,9 @@ written by
 
 #include "Base.h"
 #include "Manager.h"
-#include "Timer.h"
-#include "XBits.h"
-#include "XFunction.h"
+#include "Timer.cpp"
+#include "XBits.cpp"
+#include "XFunction.cpp"
 #include "BDDNode.h"
 
 #include <cstdio>

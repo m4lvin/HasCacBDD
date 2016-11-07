@@ -42,7 +42,7 @@ written by
 #include "Base.h"
 #include "CTable.h"
 #include "Manager.h"
-#include "Timer.h"
+#include "Timer.cpp"
 #include <iostream>
 using namespace std;
 

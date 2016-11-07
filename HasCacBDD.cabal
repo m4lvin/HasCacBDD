@@ -30,29 +30,25 @@ library
   extra-libraries:     stdc++
   cc-options:          -g -c -fPIC -shared
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
-  c-sources:           c/BDDNodeC.cpp,
-                       cpp/BDDNode.cpp,
-                       cpp/BDDNode.h,
-                       cpp/CTable.cpp,
-                       cpp/CTable.h,
-                       cpp/DdNode.cpp,
-                       cpp/DdNode.h,
-                       cpp/Manager.cpp,
-                       cpp/Manager.h,
-                       cpp/UTable.cpp,
-                       cpp/UTable.h,
-                       cpp/Timer.h,
-                       cpp/Timer.cpp,
-                       cpp/Base.h,
-                       cpp/Base.cpp,
-                       cpp/XBits.h,
-                       cpp/XBits.cpp,
-                       cpp/XFunction.h,
-                       cpp/XFunction.cpp,
-                       cpp/XInts.h,
-                       cpp/XInts.cpp,
-                       cpp/XVector.h,
+  c-sources:           c/BDDNodeC.cpp
+                       cpp/Base.cpp
+                       cpp/Base.h
+                       cpp/BDDNode.cpp
+                       cpp/BDDNode.h
+                       cpp/CTable.cpp
+                       cpp/CTable.h
+                       cpp/DdNode.cpp
+                       cpp/DdNode.h
+                       cpp/Manager.cpp
+                       cpp/Manager.h
+                       cpp/Timer.cpp
+                       cpp/UTable.cpp
+                       cpp/UTable.h
+                       cpp/XBits.cpp
+                       cpp/XFunction.cpp
+                       cpp/XInts.cpp
                        cpp/XVector.cpp
+
 
 executable hascacbdd-example
   default-language:    Haskell2010
