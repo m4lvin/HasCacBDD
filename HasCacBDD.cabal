@@ -39,6 +39,15 @@ executable hascacbdd-example
                        HasCacBDD
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
 
+test-suite basics
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  main-is:             Basics.hs
+  hs-source-dirs:      tests
+  build-depends:       base >=4.6,
+                       HasCacBDD
+  ghc-options:         -Wall
+
 test-suite tautologies
   default-language:    Haskell2010
   type:                exitcode-stdio-1.0

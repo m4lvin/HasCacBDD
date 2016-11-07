@@ -18,6 +18,7 @@ main  = do
 tests :: [(String, IO Result)]
 tests  =
   [("selfEqual",      quickCheckResult (\b -> (b::Bdd) == b))
+  ,("singleNegation", quickCheckResult (\b -> neg b /= b))
   ,("doubleNegation", quickCheckResult (\b -> neg (neg b) == b))
   ,("selfImp",        quickCheckResult (\b -> imp b b == top))
   ,("selfEqu",        quickCheckResult (\b -> equ b b == top))
