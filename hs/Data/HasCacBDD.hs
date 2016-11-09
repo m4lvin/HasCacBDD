@@ -132,10 +132,12 @@ forall n b = withTwoBDDs bdd_Universal b (var n)
 -- | Big Existential Quantification
 existsSet :: [Int] -> Bdd -> Bdd
 existsSet ns b = foldl (flip exists) b ns
+{-# NOINLINE existsSet #-}
 
 -- | Big Universal Quantification
 forallSet :: [Int] -> Bdd -> Bdd
 forallSet ns b = foldl (flip forall) b ns
+{-# NOINLINE forallSet #-}
 
 -- | True constant
 top :: Bdd
@@ -235,12 +237,15 @@ gfp operator = gfpStep top (operator top) where
     if current == next
       then current
       else gfpStep next (operator next)
+{-# NOINLINE gfp #-}
 
 thenOf :: Bdd -> Bdd
 thenOf = withBDD bdd_Then
+{-# NOINLINE thenOf #-}
 
 elseOf :: Bdd -> Bdd
 elseOf = withBDD bdd_Else
+{-# NOINLINE elseOf #-}
 
 -- | The first variable of a given BDD, if there is one.
 firstVarOf :: Bdd -> Maybe Int
@@ -248,6 +253,7 @@ firstVarOf b
   | b == bot = Nothing
   | b == top = Nothing
   | otherwise = Just (fromIntegral (fromBDD bdd_Variable b) -(1::Int))
+{-# NOINLINE firstVarOf #-}
 
 -- | The maximum variable of a given BDD, if there is one.
 maxVarOf ::  Bdd -> Maybe Int
@@ -258,6 +264,7 @@ maxVarOf b
       v = fromBDD bdd_Variable b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
+{-# NOINLINE maxVarOf #-}
 
 -- | All variables in a given BDD.
 allVarsOf :: Bdd -> [Int]
@@ -265,15 +272,18 @@ allVarsOf b
   | b == bot = []
   | b == top = []
   | otherwise = sort $ nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
+{-# NOINLINE allVarsOf #-}
 
 subOf :: Bdd -> [Bdd]
 subOf b
   | b == bot = []
   | b == top = []
   | otherwise = nub $ b : (subOf (thenOf b) ++ subOf (elseOf b))
+{-# NOINLINE subOf #-}
 
 sizeOf :: Bdd -> Int
 sizeOf = length.subOf
+{-# NOINLINE sizeOf #-}
 
 -- FIXME: Should we print outermost brackets around non-constant BDDs?
 instance Show Bdd where

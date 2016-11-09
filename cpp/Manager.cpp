@@ -982,6 +982,7 @@ void  XManager::ShowInfo(double vtime)
 {
     double mem = (20.0*(NodeCount() + GetCacheCount()) + 4.0*GetUTableCount()) / ONE_MILLION;
     cout<<"NC:"<<GetNodeCount()<<", CC:"<<GetCacheCount()<<", Mem:"<<mem<<", Hit:"<<CTable->HitRate()<<", Time:"<<vtime<<endl;
+    cout<<"INT_MAX:"<<INT_MAX<<endl;
     cout<<"==============================================================================="<<endl;
 }
 
