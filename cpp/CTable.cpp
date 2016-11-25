@@ -39,7 +39,7 @@ written by
    Guanfeng Lv, last updated 10/26/2012
 *****************************************************************************/
 
-#include "Base.h"
+#include "Base.cpp"
 #include "CTable.h"
 #include "Manager.h"
 #include "Timer.cpp"

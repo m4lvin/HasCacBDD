@@ -18,7 +18,7 @@ module Data.HasCacBDD (
   -- * Show and convert to trees
   BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
   -- * Print some debugging information
-  maximumvar, showInfo
+  maximumvar, showInfo, runexample
 ) where
 
 import Foreign.C
@@ -51,6 +51,7 @@ type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: Ptr CacXBddManager -> IO ()
+foreign import ccall unsafe "BDDNodeC.h runexample" runexample :: IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO (Ptr CacBDD)

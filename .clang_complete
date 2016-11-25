@@ -1,0 +1,5 @@
+-Ic
+-Icpp
+-Wall
+-std=c++11
+-Wno-return-type-c-linkage

@@ -39,7 +39,7 @@ written by
    Guanfeng Lv and Kaile Su, last updated 14/07/2015
 *****************************************************************************/
 
-#include "Base.h"
+#include "Base.cpp"
 #include "Manager.h"
 #include "Timer.cpp"
 #include "XBits.cpp"
@@ -973,9 +973,13 @@ int XManager::GetNodeCount()
     return NodeCount();
 }
 
-void XManager::PrintNode(DdNode *node)
+void XManager::PrintNode(DD index)
 {
-    cout<<node->var<<", Then:"<<node->Then<<",Else:"<<ADDR(node->Else)<<",Next:"<<node->Next<<endl;
+    cout<<"almost..."<<endl;
+    DdNode node = nodes[index];
+    cout<<"there..."<<endl;
+    cout<<node.var<<", Then:"<<node.Then<<",Else:"<<ADDR(node.Else)<<",Next:"<<node.Next<<endl;
+    cout<<"nope."<<endl;
 }
 
 void  XManager::ShowInfo(double vtime)

@@ -43,7 +43,7 @@ written by
 #ifndef _DDNODE_
 #define _DDNODE_
 
-#include "Base.h"
+#include "Base.cpp"
 #include <stdlib.h>
 #include <iostream>
 #include <assert.h>

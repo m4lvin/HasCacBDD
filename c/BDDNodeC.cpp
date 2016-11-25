@@ -60,3 +60,27 @@ BDD BDD_Operator_Nand(const BDD* this_ptr, const BDD* other) { return(BDD) (*thi
 BDD BDD_Operator_XNor(const BDD* this_ptr, const BDD* other) { return(BDD) (*this_ptr & *other); }
 
 void XBDDManager_ShowInfo(XBDDManager* this_ptr, double vtime) { return this_ptr->ShowInfo(); }
+
+void runexample() {
+  int vc = 6;
+  XBDDManager mgr(vc);
+  BDD *x = new BDD[vc+1];
+  for(int i=1; i<=vc; i++){
+      x[i] = mgr.BddVar(i);
+  }
+  BDD r = (!x[4] + !x[6]) * (!x[3] + !x[6]) * (!x[2] + !x[5]);
+  BDD v  = mgr.BddOne();
+  if (r == v) cout<<"equal to one"<<endl;
+  else cout<<"not equal to one"<<endl;
+  if (v == r) cout<<"equal one to"<<endl;
+  else cout<<"not equal one to"<<endl;
+  BDD u  = mgr.BddZero();
+  if (r == u) cout<<"equal to zero"<<endl;
+  else cout<<"not equal to zero"<<endl;
+  if (u == r) cout<<"equal zero to"<<endl;
+  else cout<<"not equal zero to"<<endl;
+  cout <<"printing the node of r ..."<<endl;
+  r.Print();
+  cout <<"goodbye!"<<endl;
+  delete []x;
+}

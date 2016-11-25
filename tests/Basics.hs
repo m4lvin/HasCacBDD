@@ -5,6 +5,19 @@ import System.Exit
 
 main :: IO ()
 main = do
+  putStrLn "\nRunning CacBDD example in C++ ..."
+  runexample
+  putStrLn "\nRunning CacBDD example in Haskell ..."
+  let cacExample = conSet [ dis (neg (var 4)) (neg (var 6)) , neg (var 3) `dis` neg (var 6), neg (var 2) `dis` neg (var 5) ]
+  print cacExample
+  putStr "Equal to top? "
+  print $ cacExample == top
+  putStr "Equal top to? "
+  print $ top == cacExample
+  putStr "Equal to bot? "
+  print $ cacExample == bot
+  putStr "Equal bot to? "
+  print $ bot == cacExample
   putStrLn "\nRunning basic tests ..."
   if all snd tests
     then do

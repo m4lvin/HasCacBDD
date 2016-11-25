@@ -258,3 +258,8 @@ void BDD::Support(vector<int> &vars)
 {
     mgr->Support(node, vars);
 }
+
+void BDD::Print()
+{
+  mgr->PrintNode(node);
+}

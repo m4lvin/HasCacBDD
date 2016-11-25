@@ -27,12 +27,11 @@ library
   default-language:    Haskell2010
   hs-source-dirs:      hs
   include-dirs:        c cpp
-  extra-libraries:     stdc++
-  cc-options:          -g -c -fPIC -shared
+  extra-libraries:     m, stdc++
+  cc-options:          -g -O3 -Wno-deprecated
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
   c-sources:           c/BDDNodeC.cpp
                        cpp/Base.cpp
-                       cpp/Base.h
                        cpp/BDDNode.cpp
                        cpp/BDDNode.h
                        cpp/CTable.cpp
