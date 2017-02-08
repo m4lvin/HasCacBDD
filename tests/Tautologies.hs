@@ -1,12 +1,13 @@
 module Main where
 
+import Control.Monad
 import Data.HasCacBDD
+import Data.List
 import Data.Maybe
 import Data.Tuple
 import Text.Printf
 import Test.QuickCheck
 import Test.QuickCheck.Test
-import Control.Monad
 import System.Exit
 
 main :: IO ()
@@ -50,9 +51,11 @@ tests  =
   ,("anySatWith",     quickCheckResult (\b -> let vs = allVarsOf b in if b==bot then isNothing (anySatWith vs b) else restrictSet b (fromJust $ anySatWith vs b) == top))
   ,("satCountWith",   quickCheckResult (\b -> let vs = allVarsOf b in length (allSatsWith vs b) == satCountWith vs b))
   ,("subOf",          quickCheckResult (\b -> all (`elem` subOf b) (subOf $ thenOf b)))
-  , let relabelTest b = relabel gnippam (relabel mapping b) == b where
-          vs = allVarsOf b
+  , let relabelTest b c = relabel gnippam (relabel mapping b) == b where
+          vs = reverse $ nub (allVarsOf b ++ allVarsOf c)
           mapping = zip vs (map (+100) vs)
           gnippam = map swap mapping
     in ("relabel",    quickCheckResult relabelTest)
+  , ("show",          verboseCheckResult (\a b -> (show (unravel a) == show (unravel b)) == (a == (b::Bdd))))
+  , ("showList",      verboseCheckResult (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd))))
   ]

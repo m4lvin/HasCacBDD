@@ -27,7 +27,7 @@ import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe
 import Data.List (nub,(\\),sort)
 import Data.Maybe (fromJust)
-import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, elements, oneof, sized, listOf)
+import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, oneof, sized, listOf)
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -282,7 +282,7 @@ instance Show Bdd where
 -- TODO: add a Read instance and test that Show and Read are inverses of each other
 
 -- | A simple tree definition to show BDDs as text.
-data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Eq)
+data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show)
 
 -- | Convert a BDD to a tree.
 unravel :: Bdd -> BddTree
@@ -373,25 +373,27 @@ showInfo = withForeignPtr mptr xBddManager_showInfo where (XBddManager mptr) = m
 instance Arbitrary Bdd where
   arbitrary = sized randombdd
 
+randomvarnumber :: Gen Int
+randomvarnumber = choose (0, 100)
+
 randombdd ::  Int -> Gen Bdd
-randombdd sz = bdd sz' where
-  sz' = min maximumvar sz
-  bdd 0 = oneof [ pure top
-                , pure bot
-                , var <$> choose (0, sz')
-                ]
-  bdd n = oneof [ var <$> choose (0, sz')
-                , neg <$> st
-                , con <$> st <*> st
-                , dis <$> st <*> st
-                , imp <$> st <*> st
-                , equ <$> st <*> st
-                , xor <$> st <*> st
-                , exists <$> randomvar <*> st
-                , existsSet <$> listOf randomvar <*> st
-                , forall <$> randomvar <*> st
-                , forallSet <$> listOf randomvar <*> st
-                ]
-    where
-      st = bdd (n `div` 2)
-      randomvar = elements [0..maximumvar]
+randombdd 0 = oneof
+  [ pure top
+  , pure bot
+  , var <$> randomvarnumber
+  ]
+randombdd n = oneof
+  [ var <$> randomvarnumber
+  , neg <$> smallerbdd
+  , con <$> smallerbdd <*> smallerbdd
+  , dis <$> smallerbdd <*> smallerbdd
+  , imp <$> smallerbdd <*> smallerbdd
+  , equ <$> smallerbdd <*> smallerbdd
+  , xor <$> smallerbdd <*> smallerbdd
+  , exists <$> randomvarnumber <*> smallerbdd
+  , existsSet <$> listOf randomvarnumber <*> smallerbdd
+  , forall <$> randomvarnumber <*> smallerbdd
+  , forallSet <$> listOf randomvarnumber <*> smallerbdd
+  ]
+  where
+    smallerbdd = randombdd (min (n `div` 2) 10)
