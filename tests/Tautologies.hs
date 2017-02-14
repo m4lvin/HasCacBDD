@@ -56,6 +56,6 @@ tests  =
           mapping = zip vs (map (+100) vs)
           gnippam = map swap mapping
     in ("relabel",    quickCheckResult relabelTest)
-  , ("show",          verboseCheckResult (\a b -> (show (unravel a) == show (unravel b)) == (a == (b::Bdd))))
-  , ("showList",      verboseCheckResult (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd))))
+  , ("show",          quickCheckResult (\a b -> (show (unravel a) == show (unravel b)) == (a == (b::Bdd))))
+  , ("showList",      quickCheckResult (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd))))
   ]

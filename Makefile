@@ -42,6 +42,12 @@ example:
 clean:
 	rm -rf dist/*
 
+allnonhaskell:
+	make getcpp
+	make cppbuild
+	make cbuild
+	sudo make cinstall
+
 all:
 	make getcpp
 	make cppbuild
