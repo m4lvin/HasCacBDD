@@ -1,6 +1,8 @@
 HasCacBDD
 =========
 
+[![Build Status](https://travis-ci.org/m4lvin/HasCacBDD.svg?branch=master)](https://travis-ci.org/m4lvin/HasCacBDD)
+
 Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
 
 Using CacBDD from http://kailesu.net/CacBDD/

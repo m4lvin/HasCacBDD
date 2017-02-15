@@ -2,6 +2,7 @@
 
 module Data.HasCacBDD.Visuals (
   genGraph,
+  genGraphWith,
   showGraph,
   svgGraph
 ) where
@@ -12,7 +13,11 @@ import System.IO
 
 -- | Generate a string which describes the BDD in the dot language.
 genGraph :: Bdd -> String
-genGraph myb
+genGraph = genGraphWith show
+
+-- | Given a function to show variables, generate a string which describes the BDD in the dot language.
+genGraphWith :: (Int -> String) -> Bdd -> String
+genGraphWith myShow myb
   | myb == bot = "digraph g { Bot [label=\"0\",shape=\"box\"]; }"
   | myb == top = "digraph g { Top [label=\"1\",shape=\"box\"]; }"
   | otherwise = "strict digraph g {\n" ++ links ++ sinks ++ rankings ++ "}" where
@@ -26,7 +31,7 @@ genGraph myb
               thisn = if null done then 0 else maximum (map snd done) + 1
               thisnstr = show thisn
               (Just thisvar) = firstVarOf curB
-              out1  = "n" ++ thisnstr ++ " [label=\"" ++ show thisvar ++ "\",shape=\"circle\"];\n"
+              out1  = "n" ++ thisnstr ++ " [label=\"" ++ myShow thisvar ++ "\",shape=\"circle\"];\n"
               lhs   = thenOf curB
               (lhsoutput,lhsdone) = genGraphStep ((curB,thisn):done) lhs
               (Just leftn) = lookup lhs lhsdone
