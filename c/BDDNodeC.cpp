@@ -79,8 +79,8 @@ void runexample() {
   else cout<<"not equal to zero"<<endl;
   if (u == r) cout<<"equal zero to"<<endl;
   else cout<<"not equal zero to"<<endl;
-  cout <<"printing the node of r ..."<<endl;
-  r.Print();
+  // cout <<"printing the node of r ..."<<endl;
+  // r.Print();
   cout <<"goodbye!"<<endl;
   delete []x;
 }
