@@ -140,7 +140,7 @@ void XCTable::Insert(DD A, DD B, DD C, DD tmp)
 
 void  XCTable::size_inc(int incCnt)
 {
-    if(toAddCount <= 0 && count <= mgr->maxCacheSize / 2 && mgr->GetAvailMem() > (long long)(count * sizeof(CTableNode))){
+    if(toAddCount <= 0 && count <= mgr->maxCacheSize / 2 && mgr->GetAvailMem() > (unsigned long long)(count * sizeof(CTableNode))){
         toAddCount += incCnt;
     }
 }

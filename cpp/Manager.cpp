@@ -311,7 +311,7 @@ DD  XManager::IteRecur(DD f, DD g, DD h)
     if(b){ return (comple)?Not(r):r; }
 
 
-    int index;
+    int index = 0;
     DD fv, fnv, gv, gnv, hv, hnv;
     if(topf <= v){
         v = Min(topf, v);
@@ -752,7 +752,6 @@ DD XManager::Compose(DD f, int v, DD g)
 
 int  XManager::LargestPath(DD from, vector<int> &path)
 {
-    double startTime = Timer::GetTime();
 
     class XPathNode{
     public:
@@ -912,8 +911,7 @@ void XManager::GarbageCollection()
         ds[i] = i;
     }
     int curDead = varCount+1;
-    int curLive = varCount+1;
-    int newcount;
+    int newcount = varCount+1;
 
     for(int i = varCount+1; i<NodeCount(); i++){
         if(c[i] == 1){
@@ -973,20 +971,15 @@ int XManager::GetNodeCount()
     return NodeCount();
 }
 
-void XManager::PrintNode(DD index)
+void XManager::PrintNode(DdNode *node)
 {
-    cout<<"almost..."<<endl;
-    DdNode node = nodes[index];
-    cout<<"there..."<<endl;
-    cout<<node.var<<", Then:"<<node.Then<<",Else:"<<ADDR(node.Else)<<",Next:"<<node.Next<<endl;
-    cout<<"nope."<<endl;
+    cout<<node->var<<", Then:"<<node->Then<<",Else:"<<ADDR(node->Else)<<",Next:"<<node->Next<<endl;
 }
 
 void  XManager::ShowInfo(double vtime)
 {
     double mem = (20.0*(NodeCount() + GetCacheCount()) + 4.0*GetUTableCount()) / ONE_MILLION;
     cout<<"NC:"<<GetNodeCount()<<", CC:"<<GetCacheCount()<<", Mem:"<<mem<<", Hit:"<<CTable->HitRate()<<", Time:"<<vtime<<endl;
-    cout<<"INT_MAX:"<<INT_MAX<<endl;
     cout<<"==============================================================================="<<endl;
 }
 

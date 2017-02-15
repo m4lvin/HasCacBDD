@@ -57,7 +57,6 @@ class XManager{
 private:
     friend class XCTable;
     friend class XUTable;
-    friend class BDD;
     int varCount;
     int maxCacheSize;
     DdNodes  nodes;
@@ -135,7 +134,7 @@ public:
     int    GetCacheCount() { return CTable->Count(); };
     double Get_CTable_HitRate(){ return CTable->HitRate();};
     double Get_UTable_HitRate(){ return UTable->HitRate();};
-    void   PrintNode(DD node);
+    void   PrintNode(DdNode *node);
 };
 //======================================================
 inline int XManager::Variable(DD A)

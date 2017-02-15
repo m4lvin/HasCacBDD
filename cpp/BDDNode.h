@@ -86,7 +86,6 @@ public:
 		XManager *manager() const;
 		DD Node() const;
 
-		void Print();  // Print it
 };
 
 class XBDDManager{

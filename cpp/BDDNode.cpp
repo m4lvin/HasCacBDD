@@ -239,7 +239,7 @@ BDD BDD::Compose(int v, const BDD& other) const
 BDD BDD::Permute(const vector<int> &permu) const
 {
     int *x = new int[permu.size()];
-    for(int i=0; i<permu.size(); i++){
+    for(unsigned int i=0; i<permu.size(); i++){
         x[i] = permu[i];
     }
     DD result = mgr->Permute(node, x);
@@ -257,9 +257,4 @@ BDD BDD::AndExist(const BDD& other, const BDD& cube)
 void BDD::Support(vector<int> &vars)
 {
     mgr->Support(node, vars);
-}
-
-void BDD::Print()
-{
-  mgr->PrintNode(node);
 }

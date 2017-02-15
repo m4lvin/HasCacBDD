@@ -18,7 +18,7 @@ module Data.HasCacBDD (
   -- * Show and convert to trees
   BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
   -- * Print some debugging information
-  maximumvar, showInfo, runexample
+  maximumvar, showInfo
 ) where
 
 import Foreign.C
@@ -32,17 +32,19 @@ import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, oneof, sized, listOf)
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
 type CacBDD = ()
-data Bdd = Bdd (ForeignPtr CacBDD)
+newtype Bdd = Bdd (ForeignPtr CacBDD)
 
 -- | We attach the free() finalizer to our BDDs.
 finalize :: Ptr CacBDD -> Bdd
 finalize ptr = Bdd (unsafePerformIO $ newForeignPtr finalizerFree ptr)
+{-# NOINLINE finalize #-}
 
 finalizeMgr :: Ptr CacXBddManager -> XBddManager
 finalizeMgr ptr = XBddManager (unsafePerformIO $ newForeignPtr finalizerFree ptr)
+{-# NOINLINE finalizeMgr #-}
 
 type CacXBddManager = ()
-data XBddManager = XBddManager (ForeignPtr CacXBddManager)
+newtype XBddManager = XBddManager (ForeignPtr CacXBddManager)
 
 type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO (Ptr CacBDD)
 type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
@@ -51,7 +53,6 @@ type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: Ptr CacXBddManager -> IO ()
-foreign import ccall unsafe "BDDNodeC.h runexample" runexample :: IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO (Ptr CacBDD)
@@ -133,12 +134,10 @@ forall n b = withTwoBDDs bdd_Universal b (var n)
 -- | Big Existential Quantification
 existsSet :: [Int] -> Bdd -> Bdd
 existsSet ns b = foldl (flip exists) b ns
-{-# NOINLINE existsSet #-}
 
 -- | Big Universal Quantification
 forallSet :: [Int] -> Bdd -> Bdd
 forallSet ns b = foldl (flip forall) b ns
-{-# NOINLINE forallSet #-}
 
 -- | True constant
 top :: Bdd
@@ -238,15 +237,12 @@ gfp operator = gfpStep top (operator top) where
     if current == next
       then current
       else gfpStep next (operator next)
-{-# NOINLINE gfp #-}
 
 thenOf :: Bdd -> Bdd
 thenOf = withBDD bdd_Then
-{-# NOINLINE thenOf #-}
 
 elseOf :: Bdd -> Bdd
 elseOf = withBDD bdd_Else
-{-# NOINLINE elseOf #-}
 
 -- | The first variable of a given BDD, if there is one.
 firstVarOf :: Bdd -> Maybe Int
@@ -254,7 +250,6 @@ firstVarOf b
   | b == bot = Nothing
   | b == top = Nothing
   | otherwise = Just (fromIntegral (fromBDD bdd_Variable b) -(1::Int))
-{-# NOINLINE firstVarOf #-}
 
 -- | The maximum variable of a given BDD, if there is one.
 maxVarOf ::  Bdd -> Maybe Int
@@ -265,7 +260,6 @@ maxVarOf b
       v = fromBDD bdd_Variable b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
-{-# NOINLINE maxVarOf #-}
 
 -- | All variables in a given BDD.
 allVarsOf :: Bdd -> [Int]
@@ -273,18 +267,15 @@ allVarsOf b
   | b == bot = []
   | b == top = []
   | otherwise = sort $ nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
-{-# NOINLINE allVarsOf #-}
 
 subOf :: Bdd -> [Bdd]
 subOf b
   | b == bot = []
   | b == top = []
   | otherwise = nub $ b : (subOf (thenOf b) ++ subOf (elseOf b))
-{-# NOINLINE subOf #-}
 
 sizeOf :: Bdd -> Int
 sizeOf = length.subOf
-{-# NOINLINE sizeOf #-}
 
 -- FIXME: Should we print outermost brackets around non-constant BDDs?
 instance Show Bdd where

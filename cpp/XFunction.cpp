@@ -36,7 +36,7 @@ public:
         sprintf(buf, "%d", v);
         string r = buf;
         size_t k = r.length();
-        for(int i=0; i<outlen-k; i++){
+        for(unsigned int i=0; i<outlen-k; i++){
             r = r+' ';
         }
         return r;
@@ -49,7 +49,7 @@ public:
         sprintf(buf, "%lld", v);
         string r = buf;
         size_t k = r.length();
-        for(int i=0; i<outlen-k; i++){
+        for(unsigned int i=0; i<outlen-k; i++){
             r = r+' ';
         }
         return r;

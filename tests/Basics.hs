@@ -5,8 +5,8 @@ import System.Exit
 
 main :: IO ()
 main = do
-  putStrLn "\nRunning CacBDD example in C++ ..."
-  runexample
+  -- putStrLn "\nRunning CacBDD example in C++ ..."
+  -- runexample
   putStrLn "\nRunning CacBDD example in Haskell ..."
   let cacExample = conSet [ dis (neg (var 4)) (neg (var 6)) , neg (var 3) `dis` neg (var 6), neg (var 2) `dis` neg (var 5) ]
   print cacExample

@@ -28,7 +28,7 @@ library
   hs-source-dirs:      hs
   include-dirs:        c cpp
   extra-libraries:     m, stdc++
-  cc-options:          -g -O3 -Wno-deprecated
+  cc-options:          -g -O3 -Wall
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
   c-sources:           c/BDDNodeC.cpp
                        cpp/Base.cpp
