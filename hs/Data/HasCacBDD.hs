@@ -11,6 +11,8 @@ module Data.HasCacBDD (
   exists, forall, forallSet, existsSet,
   restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel,
+  -- * Evaluation
+  evaluate,
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Sub-BDDs and length
@@ -32,7 +34,10 @@ import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, oneof, sized, listOf)
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
 type CacBDD = ()
-data Bdd = Bdd (ForeignPtr CacBDD)
+newtype Bdd = Bdd (ForeignPtr CacBDD)
+
+-- | An assignment of boolean values to variables/integers.
+type Assignment = [(Int,Bool)]
 
 -- | We attach the free() finalizer to our BDDs.
 finalize :: Ptr CacBDD -> Bdd
@@ -42,7 +47,7 @@ finalizeMgr :: Ptr CacXBddManager -> XBddManager
 finalizeMgr ptr = XBddManager (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
 type CacXBddManager = ()
-data XBddManager = XBddManager (ForeignPtr CacXBddManager)
+newtype XBddManager = XBddManager (ForeignPtr CacXBddManager)
 
 type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO (Ptr CacBDD)
 type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
@@ -104,13 +109,13 @@ fromTwoBDDs binproperty (Bdd fptr1) (Bdd fptr2) = unsafePerformIO $
     withForeignPtr fptr2 . binproperty
 {-# NOINLINE fromTwoBDDs #-}
 
--- | Restrict a given variable to a given value
+-- | Restrict a single variable to a given value
 restrict :: Bdd -> (Int,Bool) -> Bdd
 restrict b (n,bit) = withTwoBDDs bdd_Restrict b (if bit then var n else neg (var n))
 {-# NOINLINE restrict #-}
 
--- | Restrict several variables to given values
-restrictSet :: Bdd -> [(Int,Bool)] -> Bdd
+-- | Restrict with a (partial) assignment
+restrictSet :: Bdd -> Assignment -> Bdd
 restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits)
 {-# NOINLINE restrictSet #-}
 
@@ -297,8 +302,13 @@ ravel Bot = bot
 ravel Top = top
 ravel (Var n nthen nelse) = ifthenelse (var n) (ravel nthen) (ravel nelse)
 
--- | An assignment of boolean values to variables/integers.
-type Assignment = [(Int,Bool)]
+-- | Evaluate a BDD given an assignment.
+-- Returns Nothing if the assignment does not cover allVarsOf b.
+evaluate :: Bdd -> Assignment -> Maybe Bool
+evaluate b ass =
+  if all (`elem` map fst ass) (allVarsOf b)
+    then Just $ top == restrictSet b ass
+    else Nothing
 
 -- | Get all satisfying assignments. These will be partial, i.e. only
 -- contain (a subset of) the variables that actually occur in the BDD.

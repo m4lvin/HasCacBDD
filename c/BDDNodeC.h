@@ -14,7 +14,6 @@ BDD BDD_Compose(const BDD* this_ptr, int v, const BDD* other);
 BDD BDD_Permute(const BDD* this_ptr, const vector<int>* permu);
 BDD BDD_AndExist(BDD* this_ptr, const BDD* other, const BDD* cube);
 bool BDD_IsComp(BDD* this_ptr);
-void BDD_Support(BDD* this_ptr, vector<int>* vars);
 const XManager* BDD_manager(const BDD* this_ptr);
 
 // In C we can not overload operators, so we use functions instead.
