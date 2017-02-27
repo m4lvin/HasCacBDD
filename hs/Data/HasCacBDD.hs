@@ -12,7 +12,7 @@ module Data.HasCacBDD (
   restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel,
   -- * Evaluation
-  evaluate,
+  evaluate, evaluateFun,
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
   -- * Sub-BDDs and length
@@ -309,6 +309,15 @@ evaluate b ass =
   if all (`elem` map fst ass) (allVarsOf b)
     then Just $ top == restrictSet b ass
     else Nothing
+
+-- | Evaluate a BDD given a total assignment function.
+evaluateFun :: Bdd -> (Int -> Bool) -> Bool
+evaluateFun b f
+  | b == bot = False
+  | b == top = True
+  | otherwise =
+      let (Just n) = firstVarOf b
+      in evaluateFun ((if f n then thenOf else elseOf) b) f
 
 -- | Get all satisfying assignments. These will be partial, i.e. only
 -- contain (a subset of) the variables that actually occur in the BDD.

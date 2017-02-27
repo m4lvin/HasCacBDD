@@ -47,6 +47,8 @@ tests  =
   ,("gfpCon",         quickCheckResult (\b -> gfp (`con` b) == b))
   ,("sizeNeg",        quickCheckResult (\b -> sizeOf b == sizeOf (neg b)))
   ,("restrictLaw",    quickCheckResult (\a b -> b `imp` equ (restrictLaw a b) a == top))
+  ,("evaluate",       quickCheckResult (\b -> all (\s -> evaluate b s == Just True) (allSatsWith (allVarsOf b) b)))
+  ,("evaluateFun",    quickCheckResult (\b -> all (\s -> evaluateFun b (\n -> fromJust $ lookup n s)) (allSats b)))
   ,("allSatsWith",    quickCheckResult (\b -> all (\s -> restrictSet b s == top) (allSatsWith (allVarsOf b) b)))
   ,("anySatWith",     quickCheckResult (\b -> let vs = allVarsOf b in if b==bot then isNothing (anySatWith vs b) else restrictSet b (fromJust $ anySatWith vs b) == top))
   ,("satCountWith",   quickCheckResult (\b -> let vs = allVarsOf b in length (allSatsWith vs b) == satCountWith vs b))
