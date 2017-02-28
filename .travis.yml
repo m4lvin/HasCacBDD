@@ -8,7 +8,6 @@ language: generic
 cache:
   directories:
   - $HOME/.stack
-  - /usr/local/cacbdd
 
 # Ensure necessary system libraries are present
 addons:
