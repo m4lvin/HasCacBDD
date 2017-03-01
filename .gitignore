@@ -6,6 +6,8 @@ cabal-dev
 *.chs.h
 *.dyn_o
 *.dyn_hi
+*.a
+*.so
 .virtualenv
 .hpc
 .hsenv
@@ -16,3 +18,4 @@ cabal.sandbox.config
 *.hp
 .stack-work
 *.gch
+cpp/t
