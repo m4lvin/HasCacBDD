@@ -8,7 +8,7 @@ author:              Malvin Gattinger
 maintainer:          malvin@w4eg.de
 category:            Data
 build-type:          Custom
-cabal-version:       >=1.10
+cabal-version:       >=1.23
 
 description: Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) package with dynamic cache management.
              Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
@@ -25,6 +25,9 @@ extra-source-files:
 source-repository head
   type:     git
   location: git://github.com/m4lvin/HasCacBDD.git
+
+custom-setup
+  setup-depends:       base, Cabal
 
 library
   exposed-modules:     Data.HasCacBDD,
