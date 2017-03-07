@@ -10,12 +10,12 @@ category:            Data
 build-type:          Custom
 cabal-version:       >=1.10
 
-description: Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
+description: Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) package with dynamic cache management.
              Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
 
 extra-source-files:
-  c/*.cpp
-  c/*.h
+  c/BDDNodeC.cpp
+  c/BDDNodeC.h
   c/Makefile
   cpp/*.cpp
   cpp/*.h
