@@ -7,35 +7,46 @@ license-file:        LICENSE
 author:              Malvin Gattinger
 maintainer:          malvin@w4eg.de
 category:            Data
-build-type:          Simple
-cabal-version:       >=1.10
+build-type:          Custom
+cabal-version:       >=1.23
 
-description: Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
-             This package provides access to a C-wrapper which in turn calls the original C++ code.
-             More information about CacBDD is available at <http://kailesu.net/CacBDD>.
+description: Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) package with dynamic cache management.
+             Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
+
+extra-source-files:
+  c/BDDNodeC.cpp
+  c/BDDNodeC.h
+  c/Makefile
+  cpp/*.cpp
+  cpp/*.h
+  cpp/Makefile
+  cpp/README
 
 source-repository head
   type:     git
   location: git://github.com/m4lvin/HasCacBDD.git
 
+custom-setup
+  setup-depends:       base, Cabal
+
 library
   exposed-modules:     Data.HasCacBDD,
                        Data.HasCacBDD.Visuals
-  build-depends:       base >=4.6,
+  build-depends:       base >=4.8 && < 5,
                        process >= 1.1,
                        QuickCheck
   default-language:    Haskell2010
   hs-source-dirs:      hs
-  extra-lib-dirs:      /usr/local/cacbdd
-  include-dirs:        /usr/local/cacbdd
-  extra-libraries:     stdc++, BDDNodeC
+  extra-libraries:     stdc++, CacBDD
   cc-options:          -fPIC -shared
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
 
-executable hascacbdd-example
+test-suite example
   default-language:    Haskell2010
-  main-is:             example.hs
-  build-depends:       base >=4.6,
+  type:                exitcode-stdio-1.0
+  main-is:             Example.hs
+  hs-source-dirs:      tests
+  build-depends:       base >=4.8,
                        HasCacBDD
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
 
@@ -44,7 +55,7 @@ test-suite basics
   type:                exitcode-stdio-1.0
   main-is:             Basics.hs
   hs-source-dirs:      tests
-  build-depends:       base >=4.6,
+  build-depends:       base >=4.8,
                        HasCacBDD
   ghc-options:         -Wall
 
@@ -53,7 +64,7 @@ test-suite tautologies
   type:                exitcode-stdio-1.0
   main-is:             Tautologies.hs
   hs-source-dirs:      tests
-  build-depends:       base >=4.6,
+  build-depends:       base >=4.8,
                        HasCacBDD,
                        QuickCheck > 2.4
   ghc-options:         -Wall -fhpc -fforce-recomp
