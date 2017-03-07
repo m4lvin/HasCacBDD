@@ -11,4 +11,4 @@ default:
 	ar rvs $(LIBFILE) ../cpp/*.o
 
 clean:
-	rm -f *.a *.o *.so
+	rm -f *.a *.o *.so *.gch
