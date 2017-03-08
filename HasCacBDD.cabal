@@ -14,12 +14,15 @@ description: Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) packag
              Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
 
 extra-source-files:
+  README.md
+  stack.yaml
   c/BDDNodeC.cpp
   c/BDDNodeC.h
   c/Makefile
   cpp/*.cpp
   cpp/*.h
   cpp/Makefile
+  cpp/OriginalMakefile
   cpp/README
 
 source-repository head
