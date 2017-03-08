@@ -30,7 +30,9 @@ source-repository head
   location: git://github.com/m4lvin/HasCacBDD.git
 
 custom-setup
-  setup-depends:       base, Cabal
+  setup-depends:       base >= 4.8 && < 5,
+                       Cabal,
+                       directory
 
 library
   exposed-modules:     Data.HasCacBDD,
