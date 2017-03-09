@@ -1,4 +1,4 @@
--- | Import CacBDD functions and make them available under nice names.
+-- | Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
 
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Data.HasCacBDD (
@@ -11,12 +11,16 @@ module Data.HasCacBDD (
   exists, forall, forallSet, existsSet,
   restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel,
+  -- * Evaluation
+  evaluate, evaluateFun,
   -- * Get satisfying assignments
   allSats, allSatsWith, satCountWith, anySat, anySatWith,
+  -- * Variables
+  firstVarOf, maxVarOf, allVarsOf, allVarsOfSorted,
   -- * Sub-BDDs and length
-  subOf, sizeOf,
+  thenOf, elseOf, subsOf, sizeOf,
   -- * Show and convert to trees
-  BddTree(..), unravel, ravel, firstVarOf, maxVarOf, allVarsOf, thenOf, elseOf,
+  BddTree(..), unravel, ravel,
   -- * Print some debugging information
   maximumvar, showInfo
 ) where
@@ -33,6 +37,9 @@ import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, oneof, sized, listOf)
 -- from our perspective BDDs are just pointers.
 type CacBDD = ()
 newtype Bdd = Bdd (ForeignPtr CacBDD)
+
+-- | An assignment of boolean values to variables/integers.
+type Assignment = [(Int,Bool)]
 
 -- | We attach the free() finalizer to our BDDs.
 finalize :: Ptr CacBDD -> Bdd
@@ -106,13 +113,13 @@ fromTwoBDDs binproperty (Bdd fptr1) (Bdd fptr2) = unsafePerformIO $
     withForeignPtr fptr2 . binproperty
 {-# NOINLINE fromTwoBDDs #-}
 
--- | Restrict a given variable to a given value
+-- | Restrict a single variable to a given value
 restrict :: Bdd -> (Int,Bool) -> Bdd
 restrict b (n,bit) = withTwoBDDs bdd_Restrict b (if bit then var n else neg (var n))
 {-# NOINLINE restrict #-}
 
--- | Restrict several variables to given values
-restrictSet :: Bdd -> [(Int,Bool)] -> Bdd
+-- | Restrict with a (partial) assignment
+restrictSet :: Bdd -> Assignment -> Bdd
 restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits)
 {-# NOINLINE restrictSet #-}
 
@@ -238,9 +245,11 @@ gfp operator = gfpStep top (operator top) where
       then current
       else gfpStep next (operator next)
 
+-- | Then-branch of a given BDD, setting firstVarOf to True.
 thenOf :: Bdd -> Bdd
 thenOf = withBDD bdd_Then
 
+-- | Else-branch of a given BDD, setting firstVarOf to False.
 elseOf :: Bdd -> Bdd
 elseOf = withBDD bdd_Else
 
@@ -261,21 +270,27 @@ maxVarOf b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
 
--- | All variables in a given BDD.
+-- | All variables in a given BDD, *not* sorted, lazy.
 allVarsOf :: Bdd -> [Int]
 allVarsOf b
   | b == bot = []
   | b == top = []
-  | otherwise = sort $ nub (n : allVarsOf (thenOf b) ++ allVarsOf (elseOf b)) where (Just n) = firstVarOf b
+  | otherwise = let (Just n) = firstVarOf b in n : nub (allVarsOf (thenOf b) ++ allVarsOf (elseOf b))
 
-subOf :: Bdd -> [Bdd]
-subOf b
+-- | All variables in a given BDD, sorted, *not* lazy.
+allVarsOfSorted :: Bdd -> [Int]
+allVarsOfSorted = sort . allVarsOf
+
+-- | List all the sub-BDDs of a given BDD.
+subsOf :: Bdd -> [Bdd]
+subsOf b
   | b == bot = []
   | b == top = []
-  | otherwise = nub $ b : (subOf (thenOf b) ++ subOf (elseOf b))
+  | otherwise = nub $ b : (subsOf (thenOf b) ++ subsOf (elseOf b))
 
+-- | Size of the BDD, should be the number of non-terminal nodes.
 sizeOf :: Bdd -> Int
-sizeOf = length.subOf
+sizeOf = length.subsOf
 
 -- FIXME: Should we print outermost brackets around non-constant BDDs?
 instance Show Bdd where
@@ -299,8 +314,22 @@ ravel Bot = bot
 ravel Top = top
 ravel (Var n nthen nelse) = ifthenelse (var n) (ravel nthen) (ravel nelse)
 
--- | An assignment of boolean values to variables/integers.
-type Assignment = [(Int,Bool)]
+-- | Evaluate a BDD given an assignment.
+-- Returns Nothing if the assignment does not cover allVarsOf b.
+evaluate :: Bdd -> Assignment -> Maybe Bool
+evaluate b ass =
+  if all (`elem` map fst ass) (allVarsOf b)
+    then Just $ top == restrictSet b ass
+    else Nothing
+
+-- | Evaluate a BDD given a total assignment function.
+evaluateFun :: Bdd -> (Int -> Bool) -> Bool
+evaluateFun b f
+  | b == bot = False
+  | b == top = True
+  | otherwise =
+      let (Just n) = firstVarOf b
+      in evaluateFun ((if f n then thenOf else elseOf) b) f
 
 -- | Get all satisfying assignments. These will be partial, i.e. only
 -- contain (a subset of) the variables that actually occur in the BDD.

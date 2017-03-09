@@ -39,11 +39,11 @@ written by
    Guanfeng Lv and Kaile Su, last updated 14/07/2015
 *****************************************************************************/
 
-#include "Base.cpp"
+#include "Base.h"
 #include "Manager.h"
-#include "Timer.cpp"
-#include "XBits.cpp"
-#include "XFunction.cpp"
+#include "Timer.h"
+#include "XBits.h"
+#include "XFunction.h"
 #include "BDDNode.h"
 
 #include <cstdio>
@@ -311,7 +311,7 @@ DD  XManager::IteRecur(DD f, DD g, DD h)
     if(b){ return (comple)?Not(r):r; }
 
 
-    int index = 0;
+    int index;
     DD fv, fnv, gv, gnv, hv, hnv;
     if(topf <= v){
         v = Min(topf, v);
@@ -911,7 +911,8 @@ void XManager::GarbageCollection()
         ds[i] = i;
     }
     int curDead = varCount+1;
-    int newcount = varCount+1;
+    int curLive = varCount+1;
+    int newcount;
 
     for(int i = varCount+1; i<NodeCount(); i++){
         if(c[i] == 1){

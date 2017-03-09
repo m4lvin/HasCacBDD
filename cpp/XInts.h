@@ -40,81 +40,65 @@ written by
 *****************************************************************************/
 
 
-#ifndef _DDNODE_
-#define _DDNODE_
 
-#include "Base.h"
-#include <stdlib.h>
+#ifndef __XINTS__
+#define __XINTS__
+
+#include <memory.h>
 #include <iostream>
-#include <assert.h>
-
 using namespace std;
 
-class DdNode{
-public:
-    int var;
-    int Then;
-    int Else;
-    int Next;
-    DdNode():var(0),Then(0),Else(0),Next(0){};
-    DdNode(DdNode &v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-    }
-    DdNode& operator = (const DdNode& v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-        return *this;
-    }
-
-    void SetValue(int a, int b, int c, int d){ var = a; Then = b; Else = c; Next = d; };
-};
-
-class DdNodes{
+class XInts{
 private:
-    friend class XManager;
-    int slotCount;
-    int slotSize;
-    int nodeCount;
-    DdNode **slots;
+    int size;
+    int *buffer;
 public:
-    DdNodes();
-    ~DdNodes();
-
-    int  GetFreeNode();
-    void Init(int vSlotSize);
-    void Clear();
-    int  NodeCount(){ return nodeCount;};
-
-    DdNode& operator [] (int index);
+    XInts():size(0),buffer(0){};
+    ~XInts(){
+        size  = 0;
+        if(buffer){
+            free(buffer);
+            buffer = NULL;
+        };
+    }
+    inline void set_size(int vsize);
+    inline int  get_size();
+    inline void set_value(int index, int value);
+    inline int  get_value(int index);
 };
 
-inline DdNode& DdNodes::operator [] (int index)
+inline void XInts::set_size(int vsize)
 {
-    int s = index / slotSize;
-    int i = index % slotSize;
-    return slots[s][i];
+    if(buffer){
+        free(buffer);
+        buffer = NULL;
+    }
+    size = vsize;
+
+    buffer = (int *)realloc(buffer, size * sizeof(int));
+    memset(buffer, 0, size * sizeof(int));
 }
 
-inline int DdNodes::GetFreeNode()
+inline int  XInts::get_size()
 {
-    if(nodeCount == slotCount * slotSize){
-        slots[slotCount] = new DdNode[slotSize];
+    return size;
+}
 
-        for(int k=0; k<slotSize; k++){
-            slots[slotCount][k].SetValue(0,0,0,0);
-        }
-        slotCount++;
-
+inline void XInts::set_value(int index, int value)
+{
+    if(index >= size){
+        int addCount = (index - size)+1000;
+        buffer = (int *)realloc(buffer, (size + addCount)*sizeof(int));
+        memset(&buffer[size], 0, addCount * sizeof(int));
+        size += addCount;
     }
-    nodeCount++;
-    return (nodeCount - 1);
-};
+    buffer[index] = value;
+}
+
+inline int  XInts::get_value(int index)
+{
+    if(index >= size) return 0;
+    return buffer[index];
+}
 
 #endif

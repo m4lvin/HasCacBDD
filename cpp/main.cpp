@@ -40,81 +40,28 @@ written by
 *****************************************************************************/
 
 
-#ifndef _DDNODE_
-#define _DDNODE_
+#include "BDDNode.h"
 
-#include "Base.h"
-#include <stdlib.h>
-#include <iostream>
-#include <assert.h>
-
-using namespace std;
-
-class DdNode{
-public:
-    int var;
-    int Then;
-    int Else;
-    int Next;
-    DdNode():var(0),Then(0),Else(0),Next(0){};
-    DdNode(DdNode &v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-    }
-    DdNode& operator = (const DdNode& v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-        return *this;
-    }
-
-    void SetValue(int a, int b, int c, int d){ var = a; Then = b; Else = c; Next = d; };
-};
-
-class DdNodes{
-private:
-    friend class XManager;
-    int slotCount;
-    int slotSize;
-    int nodeCount;
-    DdNode **slots;
-public:
-    DdNodes();
-    ~DdNodes();
-
-    int  GetFreeNode();
-    void Init(int vSlotSize);
-    void Clear();
-    int  NodeCount(){ return nodeCount;};
-
-    DdNode& operator [] (int index);
-};
-
-inline DdNode& DdNodes::operator [] (int index)
+int main(int argc, char **argv)
 {
-    int s = index / slotSize;
-    int i = index % slotSize;
-    return slots[s][i];
+
+    int vc = 6;
+    XBDDManager mgr(vc);
+
+    BDD *x = new BDD[vc+1];
+    for(int i=1; i<=vc; i++){
+        x[i] = mgr.BddVar(i);
+    }
+
+    BDD r = (!x[4] + !x[6]) * (!x[3] + !x[6]) * (!x[2] + !x[5]);
+
+    BDD v  = mgr.BddOne();
+    if (r == v) cout<<"equal to one"<<endl;
+    else cout<<"not equal to one"<<endl;
+
+    mgr.ShowInfo();
+
+    delete []x;
+
+    return 0;
 }
-
-inline int DdNodes::GetFreeNode()
-{
-    if(nodeCount == slotCount * slotSize){
-        slots[slotCount] = new DdNode[slotSize];
-
-        for(int k=0; k<slotSize; k++){
-            slots[slotCount][k].SetValue(0,0,0,0);
-        }
-        slotCount++;
-
-    }
-    nodeCount++;
-    return (nodeCount - 1);
-};
-
-#endif

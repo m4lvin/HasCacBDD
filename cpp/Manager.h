@@ -44,9 +44,9 @@ written by
 
 #include "UTable.h"
 #include "CTable.h"
-#include "XVector.cpp"
-#include "XBits.cpp"
-#include "XInts.cpp"
+#include "XVector.h"
+#include "XBits.h"
+#include "XInts.h"
 #include <limits.h>
 #include <vector>
 #include <set>

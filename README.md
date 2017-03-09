@@ -3,14 +3,6 @@ HasCacBDD
 
 [![Build Status](https://travis-ci.org/m4lvin/HasCacBDD.svg?branch=master)](https://travis-ci.org/m4lvin/HasCacBDD)
 
-Haskell bindings for CacBDD, a BDD Package with Dynamic Cache Management.
+Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) package with dynamic cache management.
 
-Using CacBDD from http://kailesu.net/CacBDD/
-
-You probably want to type 'make all' which will:
-
-1. Download CacBDD from http://www.kailesu.net/CacBDD/CacBDD1.01.zip
-2. Install a C-wrapped version of CacBDD to /usr/local/cacbdd/
-3. Install Data.HasCacBDD  with cabal.
-
-For more details look at the Makefile.
+Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.

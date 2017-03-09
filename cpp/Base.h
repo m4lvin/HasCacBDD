@@ -39,82 +39,40 @@ written by
    Guanfeng Lv, last updated 10/26/2012
 *****************************************************************************/
 
+#ifndef __BASE__
+#define __BASE__
 
-#ifndef _DDNODE_
-#define _DDNODE_
+#define Max(a,b) ((a > b)?a:b)
+#define Min(a,b) ((a < b)?a:b)
+//-------------------------------------
+#define ONE_MILLION 1048576
+//-------------------------------------
+#define DD int
+#define ADDR(k)      (k & 0x7FFFFFFF)
+#define ISCOMP(A)    (A & 0x80000000)
+//-------------------------------------
+#define EXIST         0x80000001
+#define RESTRICT      0x80000002
+#define AND           0x80000003
+#define XOR           0x80000004
+#define OP_MAX_VALUE  0x00000010
+//-------------------------------------
+#define BDD_ITE                 0x02
+#define BDD_AND_ABSTRACT        0x06
+#define BDD_XOR_EXIST_ABSTRACT	0x0a
+#define BDD_COMPOSE_RECUR       0x0e
+#define BDD_ITE_CONSTANT        0x22
+//-------------------------------------
+#define DD_P1 12582917
+#define DD_P2 4256249
+#define DD_P3 741457
+//-------------------------------------
+#define CACHE_DYN 0
+#define CACHE_FIX 1
+#define CACHE_OLD 2
+//=====================================
 
-#include "Base.h"
-#include <stdlib.h>
-#include <iostream>
-#include <assert.h>
-
-using namespace std;
-
-class DdNode{
-public:
-    int var;
-    int Then;
-    int Else;
-    int Next;
-    DdNode():var(0),Then(0),Else(0),Next(0){};
-    DdNode(DdNode &v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-    }
-    DdNode& operator = (const DdNode& v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-        return *this;
-    }
-
-    void SetValue(int a, int b, int c, int d){ var = a; Then = b; Else = c; Next = d; };
-};
-
-class DdNodes{
-private:
-    friend class XManager;
-    int slotCount;
-    int slotSize;
-    int nodeCount;
-    DdNode **slots;
-public:
-    DdNodes();
-    ~DdNodes();
-
-    int  GetFreeNode();
-    void Init(int vSlotSize);
-    void Clear();
-    int  NodeCount(){ return nodeCount;};
-
-    DdNode& operator [] (int index);
-};
-
-inline DdNode& DdNodes::operator [] (int index)
-{
-    int s = index / slotSize;
-    int i = index % slotSize;
-    return slots[s][i];
-}
-
-inline int DdNodes::GetFreeNode()
-{
-    if(nodeCount == slotCount * slotSize){
-        slots[slotCount] = new DdNode[slotSize];
-
-        for(int k=0; k<slotSize; k++){
-            slots[slotCount][k].SetValue(0,0,0,0);
-        }
-        slotCount++;
-
-    }
-    nodeCount++;
-    return (nodeCount - 1);
-};
+#define Hash3(o,f,g,s) (((((unsigned)(unsigned long)(f) + (unsigned)(unsigned long)(o)) * DD_P1 + (unsigned)(unsigned long)(g)) * DD_P2) >> (s))
+#define Hash2(f,g,s) ((((unsigned)(unsigned long)(f) * DD_P1 + (unsigned)(unsigned long)(g)) * DD_P2) >> (s))
 
 #endif

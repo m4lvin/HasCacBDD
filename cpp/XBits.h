@@ -39,82 +39,75 @@ written by
    Guanfeng Lv, last updated 10/26/2012
 *****************************************************************************/
 
+#ifndef __XBITS__
+#define __XBITS__
 
-#ifndef _DDNODE_
-#define _DDNODE_
+#include <memory.h>
 
-#include "Base.h"
-#include <stdlib.h>
-#include <iostream>
-#include <assert.h>
-
-using namespace std;
-
-class DdNode{
-public:
-    int var;
-    int Then;
-    int Else;
-    int Next;
-    DdNode():var(0),Then(0),Else(0),Next(0){};
-    DdNode(DdNode &v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-    }
-    DdNode& operator = (const DdNode& v)
-    {
-        var = v.var;
-        Then = v.Then;
-        Else = v.Else;
-        Next = v.Next;
-        return *this;
-    }
-
-    void SetValue(int a, int b, int c, int d){ var = a; Then = b; Else = c; Next = d; };
-};
-
-class DdNodes{
+typedef unsigned char XBYTE;
+class XBits{
 private:
-    friend class XManager;
-    int slotCount;
-    int slotSize;
-    int nodeCount;
-    DdNode **slots;
+    int bitSize;
+    int chrCount;
+    XBYTE *buffer;
 public:
-    DdNodes();
-    ~DdNodes();
-
-    int  GetFreeNode();
-    void Init(int vSlotSize);
-    void Clear();
-    int  NodeCount(){ return nodeCount;};
-
-    DdNode& operator [] (int index);
+    XBits():bitSize(0),chrCount(0),buffer(0){};
+    ~XBits(){
+        bitSize  = 0;
+        chrCount = 0;
+        if(buffer){
+            free(buffer);
+            buffer = NULL;
+        };
+    }
+    inline void set_size(int vsize);
+    inline int  get_size();
+    inline void set_value(int index, int value);
+    inline int  get_value(int index);
 };
 
-inline DdNode& DdNodes::operator [] (int index)
+inline void XBits::set_size(int vsize)
 {
-    int s = index / slotSize;
-    int i = index % slotSize;
-    return slots[s][i];
+    if(buffer){
+        free(buffer);
+        buffer = NULL;
+    };
+    bitSize = vsize;
+    chrCount = (bitSize >> 3) + 1;
+    buffer = (XBYTE *)realloc(buffer, chrCount);
+    memset(buffer, 0, chrCount);
 }
 
-inline int DdNodes::GetFreeNode()
+inline int  XBits::get_size()
 {
-    if(nodeCount == slotCount * slotSize){
-        slots[slotCount] = new DdNode[slotSize];
+    return bitSize;
+}
 
-        for(int k=0; k<slotSize; k++){
-            slots[slotCount][k].SetValue(0,0,0,0);
-        }
-        slotCount++;
-
+inline void XBits::set_value(int index, int value)
+{
+    if(index >= bitSize){
+        int addChrCnt = ((index-bitSize)>>3)+10000;
+        buffer = (XBYTE *)realloc(buffer, chrCount + addChrCnt);
+        memset(&buffer[chrCount], 0, addChrCnt);
+        chrCount += addChrCnt;
+        bitSize = index + addChrCnt * 8;
     }
-    nodeCount++;
-    return (nodeCount - 1);
-};
+
+    XBYTE one  = 0x80;
+    int a = (index >> 3);
+    if(value == 1){
+        buffer[a] = (buffer[a] | (one >> (index % 8)));
+    }
+    else{
+        buffer[a] = (buffer[a] & ~(one >> (index % 8)));
+    }
+}
+
+inline int  XBits::get_value(int index)
+{
+    int a = (index >> 3);
+    XBYTE r = ((buffer[a] >> (7 - index % 8)) & 0x01);
+    return r;
+}
 
 #endif

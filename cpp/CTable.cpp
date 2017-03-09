@@ -39,10 +39,10 @@ written by
    Guanfeng Lv, last updated 10/26/2012
 *****************************************************************************/
 
-#include "Base.cpp"
+#include "Base.h"
 #include "CTable.h"
 #include "Manager.h"
-#include "Timer.cpp"
+#include "Timer.h"
 #include <iostream>
 using namespace std;
 

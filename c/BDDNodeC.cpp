@@ -25,8 +25,6 @@ BDD BDD_AndExist(BDD* this_ptr, const BDD* other, const BDD* cube) { return this
 
 bool BDD_IsComp(BDD* this_ptr) { bool b = this_ptr->IsComp(); return b; }
 
-void BDD_Support(BDD* this_ptr, vector<int>* vars) { this_ptr->Support(*vars); }
-
 const XManager* BDD_manager(const BDD* this_ptr) { return this_ptr->manager(); }
 
 XBDDManager* XBDDManager_new(int varCount) { return new XBDDManager(varCount); }
