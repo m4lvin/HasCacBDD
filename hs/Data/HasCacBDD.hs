@@ -41,7 +41,6 @@ type CacBDD = ()
 -- | An assignment of boolean values to variables/integers.
 type Assignment = [(Int,Bool)]
 
--- | We attach the free() finalizer to our BDDs.
 finalize :: Ptr CacBDD -> Bdd
 finalize ptr = Bdd (unsafePerformIO $ newForeignPtr finalizerFree ptr)
 
@@ -82,7 +81,6 @@ manager :: XBddManager
 manager = finalizeMgr (unsafePerformIO $ xBddManager_new (fromIntegral maximumvar))
 {-# NOINLINE manager #-}
 
--- | This should cover BDDOne, BddZero
 fromManager :: NullOp -> Bdd
 fromManager nulloperator = let (XBddManager mptr) = manager in
   finalize $ unsafePerformIO $
@@ -121,7 +119,7 @@ restrictSet :: Bdd -> Assignment -> Bdd
 restrictSet b bits = withTwoBDDs bdd_Restrict b (conSet $ map (\(n,bit) -> if bit then var n else neg (var n)) bits)
 {-# NOINLINE restrictSet #-}
 
--- | Restrict with a law
+-- | Restrict with a law. Note that the law is the second parameter!
 restrictLaw :: Bdd -> Bdd -> Bdd
 restrictLaw = withTwoBDDs bdd_Restrict
 {-# NOINLINE restrictLaw #-}
