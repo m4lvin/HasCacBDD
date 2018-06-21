@@ -363,7 +363,7 @@ allSatsWith :: [Int] -> Bdd -> [Assignment]
 allSatsWith allvars b = concatMap (completeAss allvars) (allSats b)
 
 -- | Given a set of all variables, get the number of satisfying assignments.
--- Note that allvars should be nub'd and sorted.
+-- Note that allvars must be nub'd and sorted.
 satCountWith :: [Int] -> Bdd -> Int
 satCountWith allvars b
   | b == top = 2 ^ length allvars
@@ -382,6 +382,7 @@ anySatWith allvars b = case anySat b of
   Just partass -> Just $ head $ completeAss allvars partass
 
 -- | Relabel variables according to the given mapping.
+-- Note that the mapping list must be sorted!
 relabel :: [(Int,Int)] -> Bdd -> Bdd
 relabel [] b = b
 relabel rel@((n,newn):rest) b
