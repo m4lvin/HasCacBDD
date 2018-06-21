@@ -31,7 +31,7 @@ import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe
 import Data.List (nub,(\\),sort)
 import Data.Maybe (fromJust)
-import Test.QuickCheck (Arbitrary, Gen, arbitrary, choose, oneof, sized, listOf)
+import Test.QuickCheck (Arbitrary, Gen, arbitrary, shrink, choose, oneof, sized, listOf)
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -400,6 +400,9 @@ showInfo = withForeignPtr mptr xBddManager_showInfo where (XBddManager mptr) = m
 -- | QuickCheck Arbitrary instances for BDDs
 instance Arbitrary Bdd where
   arbitrary = sized randombdd
+  shrink b | b == top  = []
+           | b == bot  = []
+           | otherwise = [thenOf b, elseOf b]
 
 randomvarnumber :: Gen Int
 randomvarnumber = choose (0, 100)
@@ -424,4 +427,4 @@ randombdd n = oneof
   , forallSet <$> listOf randomvarnumber <*> smallerbdd
   ]
   where
-    smallerbdd = randombdd (min (n `div` 2) 10)
+    smallerbdd = randombdd (n `div` 2)
