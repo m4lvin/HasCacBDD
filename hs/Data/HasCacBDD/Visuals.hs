@@ -23,23 +23,20 @@ genGraphWith myShow myb
   | otherwise = "strict digraph g {\n" ++ links ++ sinks ++ rankings ++ "}" where
       (links,topdone) = genGraphStep [] myb
       genGraphStep :: [(Bdd,Int)] -> Bdd -> (String,[(Bdd,Int)])
-      genGraphStep done curB = case (lookup curB done, curB == top || curB == bot) of
-        (_     ,True) -> ("",done)
-        (Just _, _) -> ("",done)
-        (Nothing,False) ->
+      genGraphStep done curB =
+        if curB `elem` [top,bot] ++ map fst done then ("",done) else
             let
               thisn = if null done then 0 else maximum (map snd done) + 1
               thisnstr = show thisn
               (Just thisvar) = firstVarOf curB
               out1  = "n" ++ thisnstr ++ " [label=\"" ++ myShow thisvar ++ "\",shape=\"circle\"];\n"
-              lhs   = thenOf curB
+              (lhs, rhs) = (thenOf curB, elseOf curB)
               (lhsoutput,lhsdone) = genGraphStep ((curB,thisn):done) lhs
               (Just leftn) = lookup lhs lhsdone
               out2
                 | lhs == top = "n"++ thisnstr ++" -> Top;\n"
                 | lhs == bot = "n"++ thisnstr ++" -> Bot;\n"
                 | otherwise  = "n"++ thisnstr ++" -> n" ++ show leftn ++";\n" ++ lhsoutput
-              rhs   = elseOf curB
               (rhsoutput,rhsdone) = genGraphStep lhsdone rhs
               (Just rightn) = lookup rhs rhsdone
               out3
