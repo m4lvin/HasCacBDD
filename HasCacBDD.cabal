@@ -46,30 +46,13 @@ library
   cc-options:          -fPIC -shared
   ghc-options:         -pgml g++ -Wall -fPIC -fno-full-laziness
 
-test-suite example
+test-suite tests
   default-language:    Haskell2010
   type:                exitcode-stdio-1.0
-  main-is:             Example.hs
-  hs-source-dirs:      tests
-  build-depends:       base >=4.8,
-                       HasCacBDD
-  ghc-options:         -Wall -threaded
-
-test-suite basics
-  default-language:    Haskell2010
-  type:                exitcode-stdio-1.0
-  main-is:             Basics.hs
-  hs-source-dirs:      tests
-  build-depends:       base >=4.8,
-                       HasCacBDD
-  ghc-options:         -Wall -threaded
-
-test-suite tautologies
-  default-language:    Haskell2010
-  type:                exitcode-stdio-1.0
-  main-is:             Tautologies.hs
+  main-is:             Main.hs
   hs-source-dirs:      tests
   build-depends:       base >=4.8,
                        HasCacBDD,
+                       hspec,
                        QuickCheck > 2.4
   ghc-options:         -Wall -threaded
