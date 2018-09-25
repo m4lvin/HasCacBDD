@@ -111,6 +111,7 @@ main  = hspec $ do
                                       gnippam = map swap mapping
                                    in
                                       relabel gnippam (relabel mapping b) == b)
+    prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) == a)
     prop "show"          (\a b -> (show (unravel a) == show (unravel b)) == (a == (b::Bdd)))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
   describe "QuickCheck Non-Tautologies" $ do

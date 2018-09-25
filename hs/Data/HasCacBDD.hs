@@ -10,7 +10,7 @@ module Data.HasCacBDD (
   neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
   exists, forall, forallSet, existsSet,
   restrict, restrictSet, restrictLaw,
-  ifthenelse, gfp, relabel,
+  ifthenelse, gfp, relabel, relabelFun,
   -- * Evaluation
   evaluate, evaluateFun,
   -- * Get satisfying assignments
@@ -392,6 +392,12 @@ relabel rel@((n,newn):rest) b
                   LT -> relabel rest b
                   EQ -> ifthenelse (var newn) (relabel rest (thenOf b)) (relabel rest (elseOf b))
                   GT -> ifthenelse (var (fromJust (firstVarOf b))) (relabel rel (thenOf b)) (relabel rel (elseOf b))
+
+-- | Relabel variables according to the given function.
+relabelFun :: (Int -> Int) -> Bdd -> Bdd
+relabelFun f b = case firstVarOf b of
+  Nothing -> b
+  Just m  -> ifthenelse (var (f m)) (relabelFun f (thenOf b)) (relabelFun f (elseOf b))
 
 -- | Show internal statistics.
 showInfo :: IO ()
