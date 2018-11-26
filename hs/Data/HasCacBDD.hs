@@ -11,6 +11,7 @@ module Data.HasCacBDD (
   exists, forall, forallSet, existsSet,
   restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel, relabelFun,
+  substit, substitSimul,
   -- * Evaluation
   evaluate, evaluateFun,
   -- * Get satisfying assignments
@@ -398,6 +399,27 @@ relabelFun :: (Int -> Int) -> Bdd -> Bdd
 relabelFun f b = case firstVarOf b of
   Nothing -> b
   Just m  -> ifthenelse (var (f m)) (relabelFun f (thenOf b)) (relabelFun f (elseOf b))
+
+-- | Substitute a BDD for a given variable in another BDD.
+substit :: Int -> Bdd -> Bdd -> Bdd
+substit n psi b =
+  case firstVarOf b of
+    Nothing -> b
+    Just k  -> case compare n k of
+      LT -> b
+      EQ -> ifthenelse psi (thenOf b) (elseOf b)
+      GT -> ifthenelse (var k) (substit n psi (thenOf b)) (substit n psi (elseOf b))
+
+-- | Simultaneous substitution of BDDs for variables.
+-- Note that this is not the same as folding `substit`.
+substitSimul :: [(Int,Bdd)] -> Bdd -> Bdd
+substitSimul []    b = b
+substitSimul repls b =
+  case firstVarOf b of
+    Nothing -> b
+    Just k  -> case lookup k repls of
+      Nothing  -> ifthenelse (var k) (substitSimul repls $ thenOf b) (substitSimul repls $ elseOf b)
+      Just psi -> ifthenelse psi     (substitSimul repls $ thenOf b) (substitSimul repls $ elseOf b)
 
 -- | Show internal statistics.
 showInfo :: IO ()

@@ -65,7 +65,7 @@ main  = hspec $ do
     it "imp (con (var 0) (var 1)) (var 0) == top" $ imp (con (var 0) (var 1)) (var 0) `shouldBe` top
     it "show top == \"Top\"" $ show top `shouldBe` "Top"
     it "show bot == \"Bot\"" $ show bot `shouldBe` "Bot"
-  describe "QuickCheck Tautologies" $ do
+  describe "QuickCheck Properties" $ do
     prop "selfEqual"      (\b -> (b::Bdd) == b)
     prop "idSymmetry"     (\a b -> ((a::Bdd) == (b::Bdd)) == (b == a))
     prop "singleNegation" (\b -> neg b /= b)
@@ -112,8 +112,13 @@ main  = hspec $ do
                                    in
                                       relabel gnippam (relabel mapping b) == b)
     prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) == a)
+    prop "substit"       (\b c -> substit 1 b c == ifthenelse b (restrict c (1,True)) (restrict c (1,False)))
     prop "show"          (\a b -> (show (unravel a) == show (unravel b)) == (a == (b::Bdd)))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
-  describe "QuickCheck Non-Tautologies" $ do
-    prop "wrong deMorganOne" $ expectFailure (\a b -> neg (a `con` b) == (neg a `con` neg b))
-    prop "wrong deMorganTwo" $ expectFailure (\a b -> neg (a `dis` b) == (neg a `dis` neg b))
+  describe "QuickCheck Expected Failures" $ do
+    prop "wrong deMorganOne" $
+      expectFailure (\a b -> neg (a `con` b) === (neg a `con` neg b))
+    prop "wrong deMorganTwo" $
+      expectFailure (\a b -> neg (a `dis` b) === (neg a `dis` neg b))
+    modifyMaxSuccess (* 1000) $ prop "folding substit is not the same as substitSimul" $
+      expectFailure (\b1 b2 c -> foldl (flip $ uncurry substit) c [(1,b1),(2,b2)] === substitSimul [(1,b1),(2,b2)] c)
