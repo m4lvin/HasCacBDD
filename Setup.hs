@@ -13,6 +13,8 @@ main = defaultMainWithHooks simpleUserHooks
   {
     preConf = makeExtLib
   , confHook = \a f -> confHook simpleUserHooks a f >>= updateExtraLibDirs
+  , postConf = disablePostConfHooks -- seems crucial to not reset extraLibDir
+  , preBuild = updateLibDirs
   , postCopy = copyExtLib
   , postClean = cleanExtLib
   }
@@ -29,18 +31,28 @@ updateExtraLibDirs localBuildInfo = do
     let myPackageDescription = localPkgDescr localBuildInfo
         lib = fromJust $ library myPackageDescription
         libBuild = libBuildInfo lib
-    dir <- getCurrentDirectory
-    print (dir ++ "/c")
+        libPref = libdir $ absoluteInstallDirs myPackageDescription localBuildInfo NoCopyDest
+    putStrLn $ "NOTE confHook: adding " ++ libPref ++ " to extraLibDirs"
     return localBuildInfo {
         localPkgDescr = myPackageDescription {
             library = Just $ lib {
                 libBuildInfo = libBuild {
-                    extraLibDirs = (dir ++ "/c") :
-                        extraLibDirs libBuild
+                    extraLibDirs = libPref : extraLibDirs libBuild
                 }
             }
         }
     }
+
+disablePostConfHooks :: Args -> ConfigFlags -> PackageDescription -> LocalBuildInfo -> IO ()
+disablePostConfHooks args flags pd lbi = return ()
+
+updateLibDirs :: Args -> BuildFlags -> IO HookedBuildInfo
+updateLibDirs _ _ = do
+    dir <- getCurrentDirectory
+    putStrLn $ "NOTE preBuild: adding " ++ dir ++ "/c into extraLibDirs"
+    let extlibDir = dir ++ "/c"
+        bi = emptyBuildInfo { extraLibDirs = [ extlibDir ] }
+    return (Just bi, [])
 
 copyExtLib :: Args -> CopyFlags -> PackageDescription -> LocalBuildInfo -> IO ()
 copyExtLib _ flags pkg_descr lbi = do
@@ -48,7 +60,7 @@ copyExtLib _ flags pkg_descr lbi = do
                 . fromFlag . copyDest
                 $ flags
     let verbosity = fromFlag $ copyVerbosity flags
-    rawSystemExit verbosity "cp" ["c/libCacBDD.a", libPref]
+    installExecutableFile verbosity "c/libCacBDD.a" (libPref ++ "/libCacBDD.a")
 
 cleanExtLib :: Args -> CleanFlags -> PackageDescription -> () -> IO ()
 cleanExtLib _ flags _ _ =
