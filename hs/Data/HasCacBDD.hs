@@ -289,14 +289,14 @@ subsOf b
 sizeOf :: Bdd -> Int
 sizeOf = length.subsOf
 
--- FIXME: Should we print outermost brackets around non-constant BDDs?
 instance Show Bdd where
-  show b = show (unravel b)
+  show = show . unravel
 
--- TODO: add a Read instance and test that Show and Read are inverses of each other
+instance Read Bdd where
+  readsPrec k input = map (\(a,s) -> (ravel a, s)) (readsPrec k input)
 
 -- | A simple tree definition to show BDDs as text.
-data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show)
+data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Read)
 
 -- | Convert a BDD to a tree.
 unravel :: Bdd -> BddTree

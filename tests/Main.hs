@@ -67,6 +67,8 @@ main  = hspec $ do
     it "show bot == \"Bot\"" $ show bot `shouldBe` "Bot"
   describe "QuickCheck Properties" $ do
     prop "selfEqual"      (\b -> (b::Bdd) == b)
+    prop "showReadEqual"  (\b -> read (show b) == (b::Bdd))
+    prop "showReadTreeEq" (\b -> (ravel . read . show . unravel $ b) == b)
     prop "idSymmetry"     (\a b -> ((a::Bdd) == (b::Bdd)) == (b == a))
     prop "singleNegation" (\b -> neg b /= b)
     prop "doubleNegation" (\b -> neg (neg b) == b)
