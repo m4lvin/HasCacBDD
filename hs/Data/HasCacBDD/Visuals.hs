@@ -7,9 +7,11 @@ module Data.HasCacBDD.Visuals (
   svgGraph
 ) where
 
-import Data.HasCacBDD
-import System.Process
+import System.Exit
 import System.IO
+import System.Process
+
+import Data.HasCacBDD
 
 -- | Generate a string which describes the BDD in the dot language.
 genGraph :: Bdd -> String
@@ -61,12 +63,7 @@ showGraph b = do
 -- | Generate SVG of a BDD with dot.
 svgGraph :: Bdd -> IO String
 svgGraph b = do
-  (inp,out,_,pid) <- runInteractiveProcess "/usr/bin/dot" ["-Tsvg" ] Nothing Nothing
-  hPutStr inp (genGraph b)
-  hSetBinaryMode inp False
-  hSetBinaryMode out False
-  hFlush inp
-  hClose inp
-  outstring <- hGetContents out
-  _ <- waitForProcess pid
-  return $ (unlines.tail.lines) outstring
+  (exitCode,out,err) <- readProcessWithExitCode "/usr/bin/dot" ["-Tsvg" ] (genGraph b)
+  case exitCode of
+    ExitSuccess -> return $ (unlines.tail.lines) out
+    ExitFailure n -> error $ "dot -Tsvg failed with exit code " ++ show n ++ " and error: " ++ err
