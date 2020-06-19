@@ -1,0 +1,16 @@
+image: haskell:8.8.3
+
+variables:
+  STACK_ROOT: "${CI_PROJECT_DIR}/.stack"
+
+cache:
+  paths:
+    - .stack
+    - .stack-work
+
+build:
+  script:
+    - stack --no-terminal test --coverage --haddock --no-haddock-deps
+
+  after_script:
+    - stack hpc report .
