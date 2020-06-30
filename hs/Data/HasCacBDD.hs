@@ -296,7 +296,7 @@ instance Read Bdd where
   readsPrec k input = map (\(a,s) -> (ravel a, s)) (readsPrec k input)
 
 -- | A simple tree definition to show BDDs as text.
-data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Show,Read)
+data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Eq,Read,Show)
 
 -- | Convert a BDD to a tree.
 unravel :: Bdd -> BddTree

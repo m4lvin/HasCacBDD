@@ -120,6 +120,7 @@ main  = hspec $ do
     prop "show"          (\a b -> (show a == show b) == (a == (b::Bdd)))
     prop "read"          (\b -> read (show b) == (b :: Bdd))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
+    prop "readList"      (\a b -> (readList (show [a,b]) == [([unravel a, unravel b] :: [BddTree], "")]))
   describe "QuickCheck Expected Failures" $ do
     prop "wrong deMorganOne" $
       expectFailure (\a b -> neg (a `con` b) === (neg a `con` neg b))
