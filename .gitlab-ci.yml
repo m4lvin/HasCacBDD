@@ -24,4 +24,6 @@ test:
 
 hlint:
   script:
+    - apt-get update -yqq
+    - apt-get install -y --no-install-recommends libtinfo5
     - curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
