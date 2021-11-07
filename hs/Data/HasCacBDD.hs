@@ -26,10 +26,11 @@ module Data.HasCacBDD (
   maximumvar, showInfo
 ) where
 
-import Foreign.C
+import Control.Arrow (Arrow(first))
+import Foreign.C (CInt)
 import Foreign.Ptr (Ptr)
 import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
-import System.IO.Unsafe
+import System.IO.Unsafe (unsafePerformIO)
 import Data.List (nub,(\\),sort)
 import Data.Maybe (fromJust)
 import Test.QuickCheck (Arbitrary, Gen, arbitrary, shrink, choose, oneof, sized, listOf)
@@ -293,7 +294,7 @@ instance Show Bdd where
   show = show . unravel
 
 instance Read Bdd where
-  readsPrec k input = map (\(a,s) -> (ravel a, s)) (readsPrec k input)
+  readsPrec k input = map (first ravel) (readsPrec k input)
 
 -- | A simple tree definition to show BDDs as text.
 data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Eq,Read,Show)

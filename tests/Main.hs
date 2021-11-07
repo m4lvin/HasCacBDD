@@ -95,7 +95,7 @@ main  = hspec $ do
     prop "deMorganTwoSet" (\as -> neg (disSet as) ==  conSet (map neg as))
     prop "conSetCommute"  (\a as -> conSet (a:as) == con (conSet as) a)
     prop "disSetCommute"  (\a as -> disSet (a:as) == dis (disSet as) a)
-    prop "xor-disSet"     ( (\as -> xorSet as `imp` disSet as == top) . (take 23) )
+    prop "xor-disSet"     ( (\as -> xorSet as `imp` disSet as == top) . take 23 )
     prop "xorSetNeg3"     (\a b c -> xorSet [a,b,c] == xorSet [neg a, b, neg c])
     prop "xorSetCommute3" (\a b c -> xorSet [a,b,c] == xor (xorSet [a,b]) c)
     prop "xorSetCommute4" (\a b c d -> xorSet [a,b,c,d] == xor (xorSet [b,c,a]) d)
@@ -104,7 +104,7 @@ main  = hspec $ do
     prop "restrictLaw"    (\a b -> b `imp` equ (restrictLaw a b) a == top)
     prop "evaluate"       (\b -> all (\s -> evaluate b s == Just True) (allSatsWith (allVarsOf b) b))
     prop "evaluateFun"    (\b -> all (\s -> evaluateFun b (\n -> fromJust $ lookup n s)) (allSats b))
-    prop "evaluateFun F"  (\b -> all (\s -> not (evaluateFun bot (\n -> fromJust $ lookup n s))) (allSats b))
+    prop "evaluateFun F"  (all (\s -> not (evaluateFun bot (\n -> fromJust $ lookup n s))) . allSats)
     prop "allSatsWith"    (\b -> all (\s -> restrictSet b s == top) (allSatsWith (allVarsOf b) b))
     prop "anySatWith"     (\b -> let vs = allVarsOf b in if b==bot then isNothing (anySatWith vs b) else restrictSet b (fromJust $ anySatWith vs b) == top)
     prop "satCountWith"   (\b -> let vs = allVarsOf b in length (allSatsWith vs b) == satCountWith vs b)
@@ -120,7 +120,7 @@ main  = hspec $ do
     prop "show"          (\a b -> (show a == show b) == (a == (b::Bdd)))
     prop "read"          (\b -> read (show b) == (b :: Bdd))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
-    prop "readList"      (\a b -> (readList (show [a,b]) == [([unravel a, unravel b] :: [BddTree], "")]))
+    prop "readList"      (\a b -> readList (show [a,b]) == [([unravel a, unravel b] :: [BddTree], "")])
   describe "QuickCheck Expected Failures" $ do
     prop "wrong deMorganOne" $
       expectFailure (\a b -> neg (a `con` b) === (neg a `con` neg b))
