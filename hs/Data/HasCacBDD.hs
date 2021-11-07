@@ -27,7 +27,7 @@ module Data.HasCacBDD (
 ) where
 
 import Control.Arrow (Arrow(first))
-import Foreign.C (CInt)
+import Foreign.C (CInt(..))
 import Foreign.Ptr (Ptr)
 import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe (unsafePerformIO)
