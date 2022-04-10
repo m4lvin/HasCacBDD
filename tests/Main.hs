@@ -13,10 +13,10 @@ main  = hspec $ do
   describe "Examples" $ do
     describe "Creating BDDs" $ do
       it "top == Top" $ show top `shouldBe` "Top"
-      it "" $ show bot `shouldBe` "Bot"
-      it "" $ show (var 1) `shouldBe` "Var 1 Top Bot"
-      it "" $ show (var 1) `shouldBe` "Var 1 Top Bot"
-      it "" $ show (var 2) `shouldBe` "Var 2 Top Bot"
+      it "show bot" $ show bot `shouldBe` "Bot"
+      it "show (var 1)" $ show (var 1) `shouldBe` "Var 1 Top Bot"
+      it "show (var 2)" $ show (var 1) `shouldBe` "Var 1 Top Bot"
+      it "show (var 3)" $ show (var 2) `shouldBe` "Var 2 Top Bot"
     describe "Some tautologies" $ do
       it "bot == bot" $ bot `shouldBe` bot
       it "top == top" $ top `shouldBe` top
@@ -37,8 +37,8 @@ main  = hspec $ do
       it "var 1 /= var 2" $ var 1 `shouldNotBe` var 2
       it "forall 1 (var 1) /= top" $ forall 1 (var 1) `shouldNotBe` top
     describe "Laws from de Morgan:" $ do
-      it "" $ dis (neg $ var 1) (neg $ var 2) == neg (con (var 1) (var 2))
-      it "" $ con (neg $ var 1) (neg $ var 2) == neg (dis (var 1) (var 2))
+      it "dis to con" $ dis (neg $ var 1) (neg $ var 2) == neg (con (var 1) (var 2))
+      it "con to dis" $ con (neg $ var 1) (neg $ var 2) == neg (dis (var 1) (var 2))
     it "The example from CacBDDs main.cpp (~x[4] + ~x[6]) * (~x[3] + ~x[6]) * (~x[2] + ~x[5]) /= top" $
       conSet [ dis (neg (var 4)) (neg (var 6)) , neg (var 3) `dis` neg (var 6), neg (var 2) `dis` neg (var 5) ] `shouldNotBe` top
     it "showInfo works" $
@@ -46,7 +46,7 @@ main  = hspec $ do
   describe "Basics" $ do
     it "top == top" $ top `shouldBe` top
     it "top /= bot" $ top `shouldNotBe` bot
-    it "bo /= top" $ bot `shouldNotBe` top
+    it "bot /= top" $ bot `shouldNotBe` top
     it "bot == bot" $ bot `shouldBe` bot
     it "neg bot == top" $ neg bot `shouldBe` top
     it "neg bot /= bot" $ neg bot `shouldNotBe` bot
