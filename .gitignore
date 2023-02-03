@@ -21,3 +21,4 @@ cabal.sandbox.config
 cpp/t
 *.tix
 stack.yaml.lock
+dist-newstyle

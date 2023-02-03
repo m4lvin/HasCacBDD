@@ -31,7 +31,7 @@ source-repository head
 
 custom-setup
   setup-depends:       base >= 4.8 && < 5,
-                       Cabal,
+                       Cabal < 3.9,
                        directory
 
 library
