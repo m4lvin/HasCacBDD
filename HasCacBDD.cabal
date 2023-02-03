@@ -1,5 +1,5 @@
 name:                HasCacBDD
-version:             0.1.0.3
+version:             0.1.0.4
 synopsis:            Haskell bindings for CacBDD
 homepage:            https://github.com/m4lvin/HasCacBDD
 license:             GPL-2
