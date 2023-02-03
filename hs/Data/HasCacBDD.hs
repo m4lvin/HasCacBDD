@@ -279,16 +279,20 @@ allVarsOf b
 allVarsOfSorted :: Bdd -> [Int]
 allVarsOfSorted = sort . allVarsOf
 
--- | List all the sub-BDDs of a given BDD.
+-- | List all node / sub-BDDs of a given BDD.
+-- This includes the root node of b itself, but omits terminal nodes.
 subsOf :: Bdd -> [Bdd]
-subsOf b
-  | b == bot = []
-  | b == top = []
-  | otherwise = nub $ b : (subsOf (thenOf b) ++ subsOf (elseOf b))
+subsOf = subsOf' [] where
+  subsOf' done b
+    | b == bot = done
+    | b == top = done
+    | b `elem` done = done
+    | otherwise     = let intermedDone = subsOf' done (thenOf b)
+                       in b : subsOf' intermedDone (elseOf b)
 
--- | Size of the BDD, should be the number of non-terminal nodes.
+-- | Size of the BDD, the number of non-terminal nodes.
 sizeOf :: Bdd -> Int
-sizeOf = length.subsOf
+sizeOf = length . subsOf
 
 instance Show Bdd where
   show = show . unravel

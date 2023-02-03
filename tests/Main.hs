@@ -100,7 +100,7 @@ main  = hspec $ do
     prop "xorSetCommute3" (\a b c -> xorSet [a,b,c] == xor (xorSet [a,b]) c)
     prop "xorSetCommute4" (\a b c d -> xorSet [a,b,c,d] == xor (xorSet [b,c,a]) d)
     prop "gfpCon"         (\b -> gfp (`con` b) == b)
-    prop "sizeNeg"        (\b -> sizeOf b == sizeOf (neg b))
+    prop "sizeOf neg"     (\b -> sizeOf b == sizeOf (neg b))
     prop "restrictLaw"    (\a b -> b `imp` equ (restrictLaw a b) a == top)
     prop "evaluate"       (\b -> all (\s -> evaluate b s == Just True) (allSatsWith (allVarsOf b) b))
     prop "evaluateFun"    (\b -> all (\s -> evaluateFun b (\n -> fromJust $ lookup n s)) (allSats b))
@@ -109,6 +109,7 @@ main  = hspec $ do
     prop "anySatWith"     (\b -> let vs = allVarsOf b in if b==bot then isNothing (anySatWith vs b) else restrictSet b (fromJust $ anySatWith vs b) == top)
     prop "satCountWith"   (\b -> let vs = allVarsOf b in length (allSatsWith vs b) == satCountWith vs b)
     prop "subsOf"         (\b -> all (`elem` subsOf b) (subsOf $ thenOf b))
+    prop "subsOf"         (\b -> all (`elem` subsOf b) (subsOf $ elseOf b))
     prop "relabel"        (\b c -> let
                                       vs = reverse $ nub (allVarsOf b ++ allVarsOf c)
                                       mapping = zip vs (map (+100) vs)
