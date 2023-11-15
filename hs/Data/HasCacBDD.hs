@@ -8,7 +8,7 @@ module Data.HasCacBDD (
   top, bot, var,
   -- * Combination and Manipulation of BDDs
   neg, con, dis, imp, equ, xor, conSet, disSet, xorSet,
-  exists, forall, forallSet, existsSet,
+  exists_, forall_, existsSet, forallSet,
   restrict, restrictSet, restrictLaw,
   ifthenelse, gfp, relabel, relabelFun,
   substit, substitSimul,
@@ -127,22 +127,22 @@ restrictLaw = withTwoBDDs bdd_Restrict
 {-# NOINLINE restrictLaw #-}
 
 -- | Existential Quantification
-exists :: Int -> Bdd -> Bdd
-exists n b = withTwoBDDs bdd_Exist b (var n)
-{-# NOINLINE exists #-}
+exists_ :: Int -> Bdd -> Bdd
+exists_ n b = withTwoBDDs bdd_Exist b (var n)
+{-# NOINLINE exists_ #-}
 
 -- | Universal Quantification
-forall :: Int -> Bdd -> Bdd
-forall n b = withTwoBDDs bdd_Universal b (var n)
-{-# NOINLINE forall #-}
+forall_ :: Int -> Bdd -> Bdd
+forall_ n b = withTwoBDDs bdd_Universal b (var n)
+{-# NOINLINE forall_ #-}
 
 -- | Big Existential Quantification
 existsSet :: [Int] -> Bdd -> Bdd
-existsSet ns b = foldl (flip exists) b ns
+existsSet ns b = foldl (flip exists_) b ns
 
 -- | Big Universal Quantification
 forallSet :: [Int] -> Bdd -> Bdd
-forallSet ns b = foldl (flip forall) b ns
+forallSet ns b = foldl (flip forall_) b ns
 
 -- | True constant
 top :: Bdd
@@ -273,7 +273,9 @@ allVarsOf :: Bdd -> [Int]
 allVarsOf b
   | b == bot = []
   | b == top = []
-  | otherwise = let (Just n) = firstVarOf b in n : nub (allVarsOf (thenOf b) ++ allVarsOf (elseOf b))
+  | otherwise =
+      let n = fromJust (firstVarOf b)
+      in n : nub (allVarsOf (thenOf b) ++ allVarsOf (elseOf b))
 
 -- | All variables in a given BDD, sorted, *not* lazy.
 allVarsOfSorted :: Bdd -> [Int]
@@ -308,7 +310,7 @@ unravel :: Bdd -> BddTree
 unravel b
   | b == bot = Bot
   | b == top = Top
-  | otherwise = Var n (unravel (thenOf b)) (unravel (elseOf b)) where (Just n) = firstVarOf b
+  | otherwise = Var n (unravel (thenOf b)) (unravel (elseOf b)) where n = fromJust $ firstVarOf b
 
 -- | Convert a tree to a BDD.
 ravel :: BddTree -> Bdd
@@ -330,7 +332,7 @@ evaluateFun b f
   | b == bot = False
   | b == top = True
   | otherwise =
-      let (Just n) = firstVarOf b
+      let n = fromJust $ firstVarOf b
       in evaluateFun ((if f n then thenOf else elseOf) b) f
 
 -- | Get all satisfying assignments. These will be partial, i.e. only
@@ -341,7 +343,7 @@ allSats b
   | b == top = [ [] ]
   | otherwise =
       [ (n,True):rest | rest <- allSats (thenOf b) ] ++ [ (n,False):rest | rest <- allSats (elseOf b) ]
-      where (Just n) = firstVarOf b
+      where n = fromJust $ firstVarOf b
 
 -- | Get the lexicographically smallest satisfying assignment, if there is any.
 anySat :: Bdd -> Maybe Assignment
@@ -350,8 +352,8 @@ anySat b
   | b == top = Just []
   | otherwise = Just ((n,hastobetrue):rest) where
       hastobetrue = elseOf b == bot
-      (Just n)    = firstVarOf b
-      (Just rest) = if hastobetrue then anySat (thenOf b) else anySat (elseOf b)
+      n = fromJust $ firstVarOf b
+      rest = fromJust $ if hastobetrue then anySat (thenOf b) else anySat (elseOf b)
 
 -- | Given a set of all variables, complete an assignment.
 completeAss :: [Int] -> Assignment -> [Assignment]
@@ -375,7 +377,7 @@ satCountWith allvars b
   | b == top = 2 ^ length allvars
   | b == bot = 0
   | otherwise = (2 ^ length varsjumped) * posbelow where
-      (Just curvar) = firstVarOf b
+      curvar = fromJust $ firstVarOf b
       varsjumped = filter (< curvar) allvars
       varsleft   = filter (> curvar) allvars
       posbelow   = sum [satCountWith varsleft (branch b) | branch <- [thenOf,elseOf] ]
@@ -454,9 +456,9 @@ randombdd n = oneof
   , imp <$> smallerbdd <*> smallerbdd
   , equ <$> smallerbdd <*> smallerbdd
   , xor <$> smallerbdd <*> smallerbdd
-  , exists <$> randomvarnumber <*> smallerbdd
+  , exists_ <$> randomvarnumber <*> smallerbdd
   , existsSet <$> listOf randomvarnumber <*> smallerbdd
-  , forall <$> randomvarnumber <*> smallerbdd
+  , forall_ <$> randomvarnumber <*> smallerbdd
   , forallSet <$> listOf randomvarnumber <*> smallerbdd
   ]
   where

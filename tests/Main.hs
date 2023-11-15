@@ -23,7 +23,7 @@ main  = hspec $ do
       it "var 1 == var 1" $ var 1 `shouldBe` var 1
       it "imp (var 1) (var 1) == top" $ imp (var 1) (var 1) `shouldBe` top
       it "equ (var 1) (var 1) == top" $ equ (var 1) (var 1) `shouldBe` top
-      it "exists 1 (neg $ var 1) == top" $ exists 1 (neg $ var 1) `shouldBe` top
+      it "exists_ 1 (neg $ var 1) == top" $ exists_ 1 (neg $ var 1) `shouldBe` top
       it "gfp (\b -> con b (var 3)) == var 3" $ gfp (\b -> con b (var 3)) `shouldBe` var 3
       it "imp (conSet [var 1, var 0]) (var 1) == top" $ imp (conSet [var 1, var 0]) (var 1) `shouldBe` top
       it "imp (conSet [var 0, var 1]) (var 0) == top" $ imp (conSet [var 0, var 1]) (var 0) `shouldBe` top
@@ -35,7 +35,7 @@ main  = hspec $ do
       it "dis (var 1) (neg $ var 2) /= top" $ dis (var 1) (neg $ var 2) `shouldNotBe` top
       it "dis (var 1) (var 2) /= top" $ dis (var 1) (var 2) `shouldNotBe` top
       it "var 1 /= var 2" $ var 1 `shouldNotBe` var 2
-      it "forall 1 (var 1) /= top" $ forall 1 (var 1) `shouldNotBe` top
+      it "forall_ 1 (var 1) /= top" $ forall_ 1 (var 1) `shouldNotBe` top
     describe "Laws from de Morgan:" $ do
       it "dis to con" $ dis (neg $ var 1) (neg $ var 2) == neg (con (var 1) (var 2))
       it "con to dis" $ con (neg $ var 1) (neg $ var 2) == neg (dis (var 1) (var 2))
@@ -57,8 +57,8 @@ main  = hspec $ do
     it "var 3 == con (var 3) top" $ var 3 `shouldBe` con (var 3) top
     it "var 4 /= con (var 3) top" $ var 4 `shouldNotBe` con (var 3) top
     it "equ (var 1) (var 1) == top" $ equ (var 1) (var 1) `shouldBe` top
-    it "exists 1 (neg $ var 1) == top" $ exists 1 (neg $ var 1) `shouldBe` top
-    it "exists 1 (neg $ var 2) /= top" $ exists 1 (neg $ var 2) `shouldNotBe` top
+    it "exists_ 1 (neg $ var 1) == top" $ exists_ 1 (neg $ var 1) `shouldBe` top
+    it "exists_ 1 (neg $ var 2) /= top" $ exists_ 1 (neg $ var 2) `shouldNotBe` top
     it "gfp (\b -> con b (var 3)) == var 3" $ gfp (\b -> con b (var 3)) `shouldBe` var 3
     it "imp (conSet [var 1,var 0]) (var 1) == top" $ imp (conSet [var 1,var 0]) (var 1) `shouldBe` top
     it "imp (conSet [var 0,var 1]) (var 0) == top" $ imp (conSet [var 0,var 1]) (var 0) `shouldBe` top
@@ -82,7 +82,7 @@ main  = hspec $ do
     prop "conElim"        (\a b -> imp (con a b) a == top)
     prop "conElim3"       (\a b c -> imp (conSet [a, b, c]) a == top)
     prop "negNotEqual"    (\b -> neg b /= b)
-    prop "quantifDuality" (forAll (elements [0..maximumvar]) (\n b -> forall n b == neg (exists n (neg b))))
+    prop "quantifDuality" (forAll (elements [0..maximumvar]) (\n b -> forall_ n b == neg (exists_ n (neg b))))
     prop "allSats"        (\b -> all (\s -> restrictSet b s == top) (allSats b))
     prop "anySat"         (\b -> if b==bot then isNothing (anySat b) else restrictSet b (fromJust $ anySat b) == top)
     prop "ifthenelse"     (\a b c -> ifthenelse a b c == neg (dis (con a (neg b)) (con (neg a) (neg c))))

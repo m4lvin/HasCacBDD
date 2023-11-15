@@ -7,6 +7,7 @@ module Data.HasCacBDD.Visuals (
   svgGraph
 ) where
 
+import Data.Maybe (fromJust)
 import System.Exit
 import System.IO
 import System.Process
@@ -30,17 +31,17 @@ genGraphWith myShow myb
             let
               thisn = if null done then 0 else maximum (map snd done) + 1
               thisnstr = show thisn
-              (Just thisvar) = firstVarOf curB
+              thisvar = fromJust $ firstVarOf curB
               out1  = "n" ++ thisnstr ++ " [label=\"" ++ myShow thisvar ++ "\",shape=\"circle\"];\n"
               (lhs, rhs) = (thenOf curB, elseOf curB)
               (lhsoutput,lhsdone) = genGraphStep ((curB,thisn):done) lhs
-              (Just leftn) = lookup lhs lhsdone
+              leftn = fromJust $ lookup lhs lhsdone
               out2
                 | lhs == top = "n"++ thisnstr ++" -> Top;\n"
                 | lhs == bot = "n"++ thisnstr ++" -> Bot;\n"
                 | otherwise  = "n"++ thisnstr ++" -> n" ++ show leftn ++";\n" ++ lhsoutput
               (rhsoutput,rhsdone) = genGraphStep lhsdone rhs
-              (Just rightn) = lookup rhs rhsdone
+              rightn = fromJust $ lookup rhs rhsdone
               out3
                 | rhs == top = "n"++ thisnstr ++" -> Top [style=dashed];\n"
                 | rhs == bot = "n"++ thisnstr ++" -> Bot [style=dashed];\n"
