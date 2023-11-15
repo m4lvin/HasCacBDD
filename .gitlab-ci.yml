@@ -19,11 +19,23 @@ build:
 test:
   script:
     - stack --no-terminal test --coverage --haddock --no-haddock-deps
+  coverage: '/(\d+)% top-level declarations used/'
   after_script:
-    - stack hpc report .
+    - rm -rf ./hpc
+    - mv .stack-work/install/*/*/*/hpc ./hpc
+  artifacts:
+    paths:
+      - "hpc/"
+  cache:
+    policy: pull
 
 hlint:
-  script:
+  image: debian:stable
+  before_script:
     - apt-get update -yqq
-    - apt-get install -y --no-install-recommends libtinfo5
+    - apt-get install -y curl
+  stage: build
+  script:
     - curl -sL https://raw.github.com/ndmitchell/hlint/master/misc/travis.sh | sh -s .
+  cache:
+    policy: pull
