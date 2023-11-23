@@ -3,6 +3,8 @@ HasCacBDD
 
 [![Release](https://img.shields.io/github/release/m4lvin/HasCacBDD.svg)](https://github.com/m4lvin/HasCacBDD/releases)
 [![Hackage](https://img.shields.io/hackage/v/HasCacBDD.svg)](https://hackage.haskell.org/package/HasCacBDD)
+[![GitLab CI](https://gitlab.com/m4lvin/HasCacBDD/badges/master/pipeline.svg)](https://gitlab.com/m4lvin/HasCacBDD/-/pipelines)
+[![Test Coverage](https://gitlab.com/m4lvin/HasCacBDD/badges/master/coverage.svg)](https://gitlab.com/m4lvin/HasCacBDD/-/jobs/artifacts/master/file/hpc/combined/all/hpc_index.html?job=test)
 
 Haskell bindings for CacBDD, a Binary Decision Diagram (BDD) package with dynamic cache management.
 
@@ -27,7 +29,9 @@ Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
     Note: `stack ghci` apparently does not work with the shared library.
     You really need `stack build` and then `stack exec ghci`.
 
-3. Play :-)
+    To use cabal instead of stack: `cabal build`, then `cabal exec ghci` and then `:set -package HasCacBDD`.
+
+3. Now you can play with Boolean functions :-)
 
        λ> import Data.HasCacBDD
        λ> var 5
