@@ -25,6 +25,9 @@ extra-source-files:
   cpp/OriginalMakefile
   cpp/README
 
+extra-doc-files:
+  CHANGELOG.md
+
 source-repository head
   type:     git
   location: git://github.com/m4lvin/HasCacBDD.git
@@ -38,8 +41,8 @@ library
   exposed-modules:     Data.HasCacBDD,
                        Data.HasCacBDD.Visuals
   build-depends:       base >=4.8 && < 5,
-                       process >= 1.1,
-                       QuickCheck
+                       process >= 1.1 && < 1.7,
+                       QuickCheck >= 2.4 && < 2.15
   default-language:    Haskell2010
   hs-source-dirs:      hs
   extra-libraries:     stdc++, CacBDD
@@ -53,6 +56,6 @@ test-suite tests
   hs-source-dirs:      tests
   build-depends:       base >=4.8,
                        HasCacBDD,
-                       hspec,
+                       hspec < 2.12,
                        QuickCheck > 2.4
   ghc-options:         -Wall -threaded
