@@ -118,6 +118,7 @@ main  = hspec $ do
                                       relabel gnippam (relabel mapping b) == b)
     prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) == a)
     prop "substit"       (\b c -> substit 5 b c == ifthenelse b (restrict c (5,True)) (restrict c (5,False)))
+    prop "optimalOrder"  (\b -> sizeOf b < 15 ==> sizeOf (relabel (optimalOrder b) b) <= sizeOf b)
     prop "show"          (\a b -> (show a == show b) == (a == (b::Bdd)))
     prop "read"          (\b -> read (show b) == (b :: Bdd))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))

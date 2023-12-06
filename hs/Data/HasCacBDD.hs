@@ -20,6 +20,8 @@ module Data.HasCacBDD (
   firstVarOf, maxVarOf, allVarsOf, allVarsOfSorted,
   -- * Sub-BDDs and length
   thenOf, elseOf, subsOf, sizeOf,
+  -- * Variable Orderings
+  optimalOrder,
   -- * Show and convert to trees
   BddTree(..), unravel, ravel,
   -- * Print some debugging information
@@ -31,7 +33,8 @@ import Foreign.C (CInt(..))
 import Foreign.Ptr (Ptr)
 import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe (unsafePerformIO)
-import Data.List (nub,(\\),sort)
+import Data.Function (on)
+import Data.List ((\\), minimumBy, nub, permutations, sort)
 import Data.Maybe (fromJust)
 import Test.QuickCheck (Arbitrary, Gen, arbitrary, shrink, choose, oneof, sized, listOf)
 
@@ -427,6 +430,12 @@ substitSimul repls b =
     Just k  -> case lookup k repls of
       Nothing  -> ifthenelse (var k) (substitSimul repls $ thenOf b) (substitSimul repls $ elseOf b)
       Just psi -> ifthenelse psi     (substitSimul repls $ thenOf b) (substitSimul repls $ elseOf b)
+
+-- | Find an optimal variable-reording.
+-- Returns a relabelling @r@ such that @sizeOf (relabel r b)@ is minimal.
+optimalOrder :: Bdd -> [(Int,Int)]
+optimalOrder b = minimumBy (compare `on` (\r -> sizeOf (relabel r b))) allPermut where
+  allPermut = map (zip (allVarsOf b)) $ permutations (allVarsOf b)
 
 -- | Show internal statistics.
 showInfo :: IO ()
