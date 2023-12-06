@@ -1,7 +1,7 @@
 module Main where
 
 import Data.HasCacBDD
-import Data.List (nub)
+import Data.List ((\\),nub)
 import Data.Maybe (fromJust,isNothing)
 import Data.Tuple (swap)
 import Test.QuickCheck
@@ -118,12 +118,17 @@ main  = hspec $ do
                                       relabel gnippam (relabel mapping b) == b)
     prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) == a)
     prop "substit"       (\b c -> substit 5 b c == ifthenelse b (restrict c (5,True)) (restrict c (5,False)))
+    prop "substit2"      (\b c -> substit (head ([0..] \\ allVarsOf c)) b c == c)
+    prop "substitSimul"  (\b -> substitSimul [] b == b)
+    prop "substitSimul2" (\b n -> substitSimul [(n,var n)] b == b)
     prop "optimalOrder"  (\b -> sizeOf b < 15 ==> sizeOf (relabel (optimalOrder b) b) <= sizeOf b)
     prop "show"          (\a b -> (show a == show b) == (a == (b::Bdd)))
     prop "read"          (\b -> read (show b) == (b :: Bdd))
     prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
     prop "readList"      (\a b -> readList (show [a,b]) == [([unravel a, unravel b] :: [BddTree], "")])
   describe "QuickCheck Expected Failures" $ do
+    prop "evaluate may return Nothing" $
+      expectFailure (\b ass -> evaluate b ass =/= Nothing)
     prop "wrong deMorganOne" $
       expectFailure (\a b -> neg (a `con` b) === (neg a `con` neg b))
     prop "wrong deMorganTwo" $

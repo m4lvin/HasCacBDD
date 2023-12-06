@@ -271,7 +271,7 @@ maxVarOf b
       m1 = maxVarOf $ thenOf b
       m2 = maxVarOf $ elseOf b
 
--- | All variables in a given BDD, *not* sorted, lazy.
+-- | All variables in a given BDD, /not/ sorted, lazy.
 allVarsOf :: Bdd -> [Int]
 allVarsOf b
   | b == bot = []
@@ -285,7 +285,7 @@ allVarsOfSorted :: Bdd -> [Int]
 allVarsOfSorted = sort . allVarsOf
 
 -- | List all node / sub-BDDs of a given BDD.
--- This includes the root node of b itself, but omits terminal nodes.
+-- This includes the root node, but omits terminal nodes.
 subsOf :: Bdd -> [Bdd]
 subsOf = subsOf' [] where
   subsOf' done b
@@ -368,13 +368,13 @@ completeAss allvars ass =
     addvars s = allvars \\ sort (map fst s)
     extend s v = [ (v,False):s, (v,True):s ]
 
--- | Get all complete assignments, given a set of all variables.
+-- | Get all complete assignments, given a list of variables.
 -- In particular this will include variables not in the BDD.
 allSatsWith :: [Int] -> Bdd -> [Assignment]
 allSatsWith allvars b = concatMap (completeAss allvars) (allSats b)
 
--- | Given a set of all variables, get the number of satisfying assignments.
--- Note that allvars must be nub'd and sorted.
+-- | Get the number of satisfying assignments, given a list of variables.
+-- Note that the given list must be nub'd and sorted.
 satCountWith :: [Int] -> Bdd -> Int
 satCountWith allvars b
   | b == top = 2 ^ length allvars
