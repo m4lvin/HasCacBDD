@@ -1,0 +1,7 @@
+cradle:
+  cabal:
+    - path: "hs"
+      component: "lib:HasCacBDD"
+
+    - path: "tests"
+      component: "HasCacBDD:test:tests"
