@@ -35,5 +35,17 @@ BDD XBDDManager_Ite(XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD
 
 void XBDDManager_ShowInfo(XBDDManager* this_ptr, double vtime);
 
-const XManager* XBDDManager_manager(const XBDDManager* this_ptr);
+const XManager *XBDDManager_manager(const XBDDManager *this_ptr);
+
+int ctest(void) {
+
+  XBDDManager* mgr = XBDDManager_new(1048576);
+  printf("%p\n", mgr);
+
+  BDD b = XBDDManager_BddOne(mgr);
+  printf("&v = %p\n", &b);
+
+  return 0;
+}
+
 }

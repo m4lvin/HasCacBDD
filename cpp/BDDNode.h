@@ -92,11 +92,11 @@ private:
     XManager *mgr;
 
 public:
-    XBDDManager(int varCount){ mgr = new XManager(varCount);}
+  XBDDManager(int varCount){ mgr = new XManager(varCount); printf("\nDEBUG BDDNode.h: new mgr made at %p\n\n", mgr); }
     ~XBDDManager(){ delete mgr; }
     void Clear(int varCnt){ mgr->Clear(varCnt); }
 
-    BDD  BddOne(){ return BDD(mgr, mgr->One);}
+    BDD  BddOne(){ printf("\nDEBUG BDDNode.h:BddOne(): mgr = %p\n\n", mgr); return BDD(mgr, mgr->One);}
     BDD  BddZero(){ return BDD(mgr, mgr->Zero);}
     BDD  BddVar(int varIndex){ return BDD(mgr, varIndex); }
     BDD  Ite(const BDD &f, const BDD &g, const BDD &h){ return BDD(mgr, mgr->ite(f.node, g.node, h.node)); };

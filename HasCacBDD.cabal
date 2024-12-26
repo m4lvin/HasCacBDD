@@ -39,6 +39,7 @@ custom-setup
 
 library
   exposed-modules:     Data.HasCacBDD,
+                       Data.HasCacBDD.Safe
                        Data.HasCacBDD.Visuals
   build-depends:       base >=4.8 && < 5,
                        process >= 1.1 && < 1.7,
@@ -58,4 +59,13 @@ test-suite tests
                        HasCacBDD,
                        hspec < 2.12,
                        QuickCheck > 2.4
+  ghc-options:         -Wall -threaded
+
+test-suite segfault
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  main-is:             segfault.hs
+  hs-source-dirs:      tests
+  build-depends:       base >=4.8,
+                       HasCacBDD
   ghc-options:         -Wall -threaded

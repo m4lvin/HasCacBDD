@@ -29,7 +29,7 @@ const XManager* BDD_manager(const BDD* this_ptr) { return this_ptr->manager(); }
 
 XBDDManager* XBDDManager_new(int varCount) { return new XBDDManager(varCount); }
 
-BDD XBDDManager_BddOne(XBDDManager* this_ptr) { return (BDD) this_ptr->BddOne(); }
+BDD XBDDManager_BddOne(XBDDManager* this_ptr) { printf("\nDEBUG BddNodeC.cpp: this_ptr = %p\n\n", this_ptr); return (BDD) this_ptr->BddOne(); }
 
 BDD XBDDManager_BddZero(XBDDManager* this_ptr) { return (BDD) this_ptr->BddZero(); }
 
