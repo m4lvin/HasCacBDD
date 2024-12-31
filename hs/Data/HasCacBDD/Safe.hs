@@ -28,17 +28,19 @@ type Assignment = [(Int,Bool)]
 data CacXBddManager
 type XBddManager = Ptr CacXBddManager
 
--- Note the additional first arguments. They are apparently used for the result value!
-type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO (Ptr CacBDD)
-type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
-type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
+-- The first pointer is for the result/output.
+type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO ()
+type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO ()
+type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO ()
 
-foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: Word -> IO (Ptr CacBDD)
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
+-- QUESTION: why do UnaryOp and BinaryOp not need the manager?
+
+foreign import ccall unsafe "BDDNodeC.h BDD_new"              bdd_new :: IO (Ptr CacBDD) -- Why additional "Word" parameter before?
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_new"      xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: Ptr CacXBddManager -> IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: NullOp
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO (Ptr CacBDD)
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> Ptr CacXBddManager -> BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Ptr CacBDD -> Ptr CacBDD -> IO Bool
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: UnaryOp
@@ -52,8 +54,6 @@ foreign import ccall unsafe "BDDNodeC.h BDD_Variable"        bdd_Variable       
 foreign import ccall unsafe "BDDNodeC.h BDD_Then"            bdd_Then            :: UnaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Else"            bdd_Else            :: UnaryOp
 
-foreign import ccall unsafe "BDDNodeC.h ctest"            ctestfun            :: IO ()
-
 -- | The maximum number of variables
 maximumvar :: Int
 maximumvar = 1048576
@@ -63,23 +63,26 @@ newManager = xBddManager_new (fromIntegral maximumvar)
 {-# NOINLINE newManager #-}
 
 fromManager :: NullOp -> IO Bdd
-fromManager nulloperator = do  
+fromManager nulloperator = do
   m <- newManager -- Weird!!
   putStrLn $ "fromManager: " ++ show m -- debug
-  b <- bdd_new 8
+  b <- bdd_new
   nulloperator b m
+  return b
 {-# NOINLINE fromManager #-}
 
 withBDD :: UnaryOp -> Bdd -> IO Bdd
 withBDD unioperator fptr = do
-  b <- bdd_new 8
+  b <- bdd_new
   unioperator b fptr
+  return b
 {-# NOINLINE withBDD #-}
 
 withTwoBDDs :: BinaryOp -> Bdd -> Bdd -> IO Bdd
 withTwoBDDs binoperator fptr1 fptr2 = do
-  b <- bdd_new 8
+  b <- bdd_new
   binoperator b fptr1 fptr2
+  return b
 {-# NOINLINE withTwoBDDs #-}
 
 fromBDD :: (Ptr CacBDD -> IO a) -> Bdd -> IO a
