@@ -4,6 +4,12 @@
 
 - ...
 
+## v0.3.0.0 (2025-01-01)
+
+- add `optimalOrder`
+- fix segfault on Apple M1 and ARM aarch64
+- minor improvements of documentation and tests
+
 ## v0.2.0.0 (2023-11-23)
 
 - rename `forall` (soon a keyword in GHC) to `forall_` and `exists` to `exists_`
