@@ -35,7 +35,7 @@ source-repository head
 custom-setup
   setup-depends:       base >= 4.8 && < 5,
                        Cabal < 3.13,
-                       directory
+                       directory <1.4
 
 library
   exposed-modules:     Data.HasCacBDD,
