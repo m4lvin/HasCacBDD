@@ -55,16 +55,15 @@ finalizeMgr ptr = XBddManager (unsafePerformIO $ newForeignPtr finalizerFree ptr
 type CacXBddManager = ()
 newtype XBddManager = XBddManager (ForeignPtr CacXBddManager)
 
-type NullOp = Ptr CacBDD -> Ptr CacXBddManager -> IO ()
-type UnaryOp = Ptr CacBDD -> Ptr CacBDD -> IO ()
-type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> Ptr CacBDD -> IO ()
+type NullOp = Ptr CacXBddManager -> IO (Ptr CacBDD)
+type UnaryOp = Ptr CacBDD -> IO (Ptr CacBDD)
+type BinaryOp = Ptr CacBDD -> Ptr CacBDD -> IO (Ptr CacBDD)
 
-foreign import ccall unsafe "BDDNodeC.h BDD_new" bdd_new :: IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_new" xBddManager_new :: CInt -> IO (Ptr CacXBddManager)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_ShowInfo" xBddManager_showInfo :: Ptr CacXBddManager -> IO ()
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddOne"  xBddManager_BddOne  :: NullOp
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddZero" xBddManager_BddZero :: NullOp
-foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacBDD -> Ptr CacXBddManager -> CInt -> IO ()
+foreign import ccall unsafe "BDDNodeC.h XBDDManager_BddVar"  xBddManager_BddVar  :: Ptr CacXBddManager -> CInt -> IO (Ptr CacBDD)
 foreign import ccall unsafe "BDDNodeC.h XBDDManager_Ite"     xBddManager_Ite     :: Ptr CacBDD -> Ptr CacXBddManager -> BinaryOp
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Equal"  bdd_Operator_Equal  :: Ptr CacBDD -> Ptr CacBDD -> IO Bool
 foreign import ccall unsafe "BDDNodeC.h BDD_Operator_Not"    bdd_Operator_Not    :: UnaryOp
@@ -89,24 +88,18 @@ manager = finalizeMgr (unsafePerformIO $ xBddManager_new (fromIntegral maximumva
 fromManager :: NullOp -> Bdd
 fromManager nulloperator = let (XBddManager mptr) = manager in
   finalize $ unsafePerformIO $ do
-    b <- bdd_new
-    withForeignPtr mptr $ nulloperator b
-    return b
+    withForeignPtr mptr nulloperator
 {-# NOINLINE fromManager #-}
 
 withBDD :: UnaryOp -> Bdd -> Bdd
 withBDD unioperator (Bdd fptr) = finalize $ unsafePerformIO $ do
-  b <- bdd_new
-  withForeignPtr fptr $ unioperator b
-  return b
+  withForeignPtr fptr $ unioperator
 {-# NOINLINE withBDD #-}
 
 withTwoBDDs :: BinaryOp -> Bdd -> Bdd -> Bdd
 withTwoBDDs binoperator (Bdd fptr1) (Bdd fptr2) = finalize $ unsafePerformIO $ do
-  b <- bdd_new
   withForeignPtr fptr1 $
-    withForeignPtr fptr2 . binoperator b
-  return b
+    withForeignPtr fptr2 . binoperator
 {-# NOINLINE withTwoBDDs #-}
 
 fromBDD :: (Ptr CacBDD -> IO a) -> Bdd -> a
@@ -167,20 +160,18 @@ bot = fromManager xBddManager_BddZero
 -- FIXME: Segfaults if n is negative or out of range.
 --        Can we add a safety check without affecting performance?
 var :: Int -> Bdd
-var n = fromManager (\bptr mptr -> xBddManager_BddVar bptr mptr (fromIntegral (n+1)))
+var n = fromManager (\mptr -> xBddManager_BddVar mptr (fromIntegral (n+1)))
 {-# NOINLINE var #-}
 
 -- | If ... then ... else ...
 ifthenelse :: Bdd -> Bdd -> Bdd -> Bdd
 ifthenelse (Bdd test) (Bdd yes) (Bdd no) =
   let (XBddManager mptr) = manager in
-    finalize $ unsafePerformIO $ do
-      b <- bdd_new
+    finalize $ unsafePerformIO $
       withForeignPtr test (\t ->
         withForeignPtr yes (\y ->
           withForeignPtr no (\n ->
-            withForeignPtr mptr (\m -> xBddManager_Ite b m t y n))))
-      return b
+            withForeignPtr mptr (\m -> xBddManager_Ite m t y n))))
 {-# NOINLINE ifthenelse #-}
 
 instance Eq Bdd where

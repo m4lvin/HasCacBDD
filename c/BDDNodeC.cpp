@@ -7,21 +7,21 @@ BDD* BDD_new() { return new BDD(); }
 
 int BDD_Variable(BDD* this_ptr) { return this_ptr->Variable(); }
 
-void BDD_Then(BDD* ret_ptr, const BDD* this_ptr) { *ret_ptr = this_ptr->Then(); }
+BDD* BDD_Then(const BDD* this_ptr) { BDD* b = new BDD(); *b = (this_ptr->Then()); return b; }
 
-void BDD_Else(BDD* ret_ptr, const BDD* this_ptr) { *ret_ptr = this_ptr->Else(); }
+BDD* BDD_Else(const BDD* this_ptr) { BDD* b = new BDD(); *b = (this_ptr->Else()); return b; }
 
-void BDD_Exist(BDD* ret_ptr, BDD* this_ptr, const BDD* cube) { *ret_ptr = this_ptr->Exist(*cube); }
+BDD* BDD_Exist(BDD* this_ptr, const BDD* cube) { BDD* b = new BDD(); *b = (this_ptr->Exist(*cube)); return b; }
 
-void BDD_Universal(BDD* ret_ptr, BDD* this_ptr, const BDD* cube) { *ret_ptr = this_ptr->Universal(*cube); }
+BDD* BDD_Universal(BDD* this_ptr, const BDD* cube) { BDD* b = new BDD(); *b = (this_ptr->Universal(*cube)); return b; }
 
-void BDD_Restrict(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = this_ptr->Restrict(*other); }
+BDD* BDD_Restrict(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = (this_ptr->Restrict(*other)); return b; }
 
-void BDD_Compose(BDD* ret_ptr, const BDD* this_ptr, int v, const BDD* other) { *ret_ptr = this_ptr->Compose(v, *other); }
+BDD* BDD_Compose(const BDD* this_ptr, int v, const BDD* other) { BDD* b = new BDD(); *b = (this_ptr->Compose(v, *other)); return b; }
 
-void BDD_Permute(BDD* ret_ptr, const BDD* this_ptr, const vector<int>* permu) { *ret_ptr = this_ptr->Permute(*permu); }
+BDD* BDD_Permute(const BDD* this_ptr, const vector<int>* permu) { BDD* b = new BDD(); *b = (this_ptr->Permute(*permu)); return b; }
 
-void BDD_AndExist(BDD* ret_ptr, BDD* this_ptr, const BDD* other, const BDD* cube) { *ret_ptr = this_ptr->AndExist(*other, *cube); }
+BDD* BDD_AndExist(BDD* this_ptr, const BDD* other, const BDD* cube) { BDD* b = new BDD(); *b = (this_ptr->AndExist(*other, *cube)); return b; }
 
 bool BDD_IsComp(BDD* this_ptr) { bool b = this_ptr->IsComp(); return b; }
 
@@ -29,32 +29,32 @@ const XManager* BDD_manager(const BDD* this_ptr) { return this_ptr->manager(); }
 
 XBDDManager* XBDDManager_new(int varCount) { return new XBDDManager(varCount); }
 
-void XBDDManager_BddOne(BDD* ret_ptr, XBDDManager* this_ptr) { *ret_ptr = this_ptr->BddOne(); }
+BDD* XBDDManager_BddOne(XBDDManager* this_ptr) { BDD* b = new BDD(); *b = (this_ptr->BddOne()); return b; }
 
-void XBDDManager_BddZero(BDD* ret_ptr, XBDDManager* this_ptr) { *ret_ptr = this_ptr->BddZero(); }
+BDD* XBDDManager_BddZero(XBDDManager* this_ptr) { BDD* b = new BDD(); *b = (this_ptr->BddZero()); return b; }
 
-void XBDDManager_BddVar(BDD* ret_ptr, XBDDManager* this_ptr, int varIndex) { *ret_ptr = this_ptr->BddVar(varIndex); }
+BDD* XBDDManager_BddVar(XBDDManager* this_ptr, int varIndex) { BDD* b = new BDD(); *b = (this_ptr->BddVar(varIndex)); return b; }
 
-void XBDDManager_Ite(BDD* ret_ptr, XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD* h) { *ret_ptr = this_ptr->Ite(*f, *g, *h); }
+BDD* XBDDManager_Ite(XBDDManager* this_ptr, const BDD* f, const BDD* g, const BDD* h) { BDD* b = new BDD(); *b = (this_ptr->Ite(*f, *g, *h)); return b; }
 
 const XManager* XBDDManager_manager(const XBDDManager* this_ptr) { return this_ptr->manager(); }
 
-void BDD_Operator_Not(BDD* ret_ptr, const BDD *this_ptr) { *ret_ptr = (!*this_ptr); }
+BDD* BDD_Operator_Not(const BDD *this_ptr) { BDD* b = new BDD(); *b = ((!*this_ptr)); return b; }
 
 bool BDD_Operator_Equal(const BDD* this_ptr, const BDD* other) { bool b = (*this_ptr == *other); return b; }
 
-void BDD_Operator_Or(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr + *other); }
+BDD* BDD_Operator_Or(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = ((*this_ptr + *other)); return b; }
 
-void BDD_Operator_And(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr * *other); }
+BDD* BDD_Operator_And(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = ((*this_ptr * *other)); return b; }
 
-void BDD_Operator_Xor(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr ^ *other); }
+BDD* BDD_Operator_Xor(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = ((*this_ptr ^ *other)); return b; }
 
-void BDD_Operator_LessEqual(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr <= *other); }
+BDD* BDD_Operator_LessEqual(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = ((*this_ptr <= *other)); return b; }
 
-void BDD_Operator_Nor(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr % *other); }
+BDD* BDD_Operator_Nor(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = (*this_ptr % *other); return b; }
 
-void BDD_Operator_Nand(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr | *other); }
+BDD* BDD_Operator_Nand(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = (*this_ptr | *other); return b; }
 
-void BDD_Operator_XNor(BDD* ret_ptr, const BDD* this_ptr, const BDD* other) { *ret_ptr = (*this_ptr & *other); }
+BDD* BDD_Operator_XNor(const BDD* this_ptr, const BDD* other) { BDD* b = new BDD(); *b = (*this_ptr & *other); return b; }
 
 void XBDDManager_ShowInfo(XBDDManager* this_ptr) { this_ptr->ShowInfo(); }
