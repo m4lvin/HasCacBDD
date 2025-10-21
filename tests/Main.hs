@@ -1,12 +1,14 @@
 module Main where
 
-import Data.HasCacBDD
 import Data.List ((\\),nub)
 import Data.Maybe (fromJust,isNothing)
 import Data.Tuple (swap)
 import Test.QuickCheck
 import Test.Hspec
 import Test.Hspec.QuickCheck
+
+import Data.HasCacBDD
+import Data.HasCacBDD.Visuals
 
 main :: IO ()
 main  = hspec $ do
@@ -135,3 +137,16 @@ main  = hspec $ do
       expectFailure (\a b -> neg (a `dis` b) === (neg a `dis` neg b))
     modifyMaxSuccess (* 1000) $ prop "folding substit is not the same as substitSimul" $
       expectFailure (\b1 b2 c -> foldl (flip $ uncurry substit) c [(1,b1),(2,b2)] === substitSimul [(1,b1),(2,b2)] c)
+  describe "Visualisation" $ do
+    describe "genGraph" $ do
+      it "var 12345" $ genGraph (var 12345) `shouldContain` "12345"
+      it "top has no circles" $ genGraph top `shouldNotContain` "circle"
+      it "bot had no circles" $ genGraph bot `shouldNotContain` "circle"
+      it "bot /= top" $ genGraph bot /= genGraph top
+    describe "svgGraph" $ do
+      it "svgGraph top returns an svg" $
+        (svgGraph top >>= \ s -> return (take 13 s  == "<!DOCTYPE svg")) `shouldReturn` True
+      it "svgGraph top is short" $
+        (svgGraph top >>= \ s -> return (length s < 1000)) `shouldReturn` True
+      it "svgGraph (var 1) is longer" $
+        (svgGraph (var 1) >>= \ s -> return (length s > 1000)) `shouldReturn` True

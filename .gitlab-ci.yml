@@ -17,6 +17,9 @@ build:
     - stack --no-terminal build
 
 test:
+  before_script:
+    - apt-get update -yqq
+    - apt-get install -y graphviz
   script:
     - stack --no-terminal test --coverage --haddock --no-haddock-deps
   coverage: '/(\d+)% top-level declarations used/'
