@@ -1,21 +1,19 @@
--- | Very simple visualisation of BDDs using /dot/.
+-- | Visualisation of BDDs using the @dot@ program from [GraphViz](https://graphviz.org/).
 
 module Data.HasCacBDD.Visuals (
   genGraph,
   genGraphWith,
   showGraph,
   svgGraph,
-  showGraphWithPaths,
-  svgGraphWithPaths,
+  svgGraphWithPath,
 ) where
 
+import Control.Monad (filterM)
 import Data.Maybe (fromJust)
+import System.Directory (doesFileExist)
 import System.Exit
 import System.IO
 import System.Process
-
-import System.Directory (doesFileExist)
-
 
 import Data.HasCacBDD
 
@@ -56,7 +54,8 @@ genGraphWith myShow myb
       rankings = concat [ "{ rank=same; "++ unwords (nodesOf v) ++ " }\n" | v <- allVarsOf myb ]
       nodesOf v = map (("n"++).show.snd) $ filter ( \(b,_) -> firstVarOf b == Just v ) topdone
 
--- | Display the graph of a BDD with dot.
+-- | Display the graph of a BDD with @\/usr\/bin\/dot -Tx11@.
+-- Only works on Linux. On other systems consider using 'svgGraph'.
 showGraph :: Bdd -> IO ()
 showGraph b = do
   (inp,_,_,pid) <- runInteractiveProcess "/usr/bin/dot" ["-Tx11"] Nothing Nothing
@@ -66,52 +65,28 @@ showGraph b = do
   _ <- waitForProcess pid
   return ()
 
--- | Generate SVG of a BDD with dot.
-svgGraph :: Bdd -> IO String
-svgGraph b = do
-  (exitCode,out,err) <- readProcessWithExitCode "/usr/bin/dot" ["-Tsvg" ] (genGraph b)
+-- | Generate SVG of a BDD with the @dot@ executable installed at the given path.
+svgGraphWithPath :: String -> Bdd -> IO String
+svgGraphWithPath dot b = do
+  (exitCode,out,err) <- readProcessWithExitCode dot ["-Tsvg" ] (genGraph b)
   case exitCode of
     ExitSuccess -> return $ (unlines.tail.lines) out
     ExitFailure n -> error $ "dot -Tsvg failed with exit code " ++ show n ++ " and error: " ++ err
 
+-- | Generate SVG of a BDD, trying default locations to find @dot@.
+svgGraph :: Bdd -> IO String
+svgGraph b = findDotPath >>= \ dot -> svgGraphWithPath dot b
 
--- | Check if a file exists
-fileExists :: FilePath -> IO Bool
-fileExists = doesFileExist
-
--- | Find a valid path from list
-findValidPath :: [FilePath] -> IO (Maybe FilePath)
-findValidPath [] = return Nothing
-findValidPath (p:ps) = do
-  exists <- fileExists p
-  if exists then return (Just p) else findValidPath ps
-
-
-paths :: [String]
-paths = ["/usr/bin/dot", "/opt/homebrew/bin/dot", "C:\\Program Files\\Graphviz\\bin\\dot.exe"]
-
--- |  Generate SVG of a BDD with dot, checking multiple paths.
-svgGraphWithPaths :: Bdd -> IO (Maybe String)
-svgGraphWithPaths b = do
-  validPath <- findValidPath paths
-  case validPath of
-    Just path -> do
-      (exitCode, out, err) <- readProcessWithExitCode path ["-Tsvg"] (genGraph b) -- path instead of raw text
-      case exitCode of
-        ExitSuccess -> return $ Just ((unlines.tail.lines) out)
-        ExitFailure n -> error $ "dot -Tsvg failed with exit code " ++ show n ++ " and error: " ++ err
-    Nothing -> return Nothing
-
--- | Display the graph of a BDD with dot, checking multiple paths.
-showGraphWithPaths :: Bdd -> IO ()
-showGraphWithPaths b = do
-  validPath <- findValidPath paths
-  case validPath of
-    Just path -> do
-      (inp,_,_,pid) <- runInteractiveProcess path ["-Tx11"] Nothing Nothing
-      hPutStr inp (genGraph b)
-      hFlush inp
-      hClose inp
-      _ <- waitForProcess pid
-      return ()
-    Nothing -> error "No valid dot executable found in the provided paths."
+-- | Try to find the @dot@ executable at some default locations.
+-- Results in an error when the exectuable is not found.
+findDotPath :: IO FilePath
+findDotPath =
+  let dotPaths = [ "/usr/bin/dot"
+                 , "/opt/homebrew/bin/dot"
+                 , "C:\\Program Files\\Graphviz\\bin\\dot.exe"
+                 , "C:\\Program Files (x86)\\Graphviz\\bin\\dot.exe" ]
+  in do
+    results <- filterM doesFileExist dotPaths
+    case results of
+      dot:_ -> return dot
+      [] -> error "Cound not find 'dot' at a standard path. Please use svgGraphWithPath instead."
