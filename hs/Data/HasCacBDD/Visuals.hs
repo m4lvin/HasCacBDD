@@ -70,7 +70,11 @@ svgGraphWithPath :: String -> Bdd -> IO String
 svgGraphWithPath dot b = do
   (exitCode,out,err) <- readProcessWithExitCode dot ["-Tsvg" ] (genGraph b)
   case exitCode of
-    ExitSuccess -> return $ (unlines.tail.lines) out
+    ExitSuccess -> case lines out of
+      [] -> error "dot -Tsvg succeeded but did not provide any output."
+      _:rest -> return (unlines rest)
+      -- NOTE: we remove the first line of the output which is
+      -- "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n"
     ExitFailure n -> error $ "dot -Tsvg failed with exit code " ++ show n ++ " and error: " ++ err
 
 -- | Generate SVG of a BDD, trying default locations to find @dot@.

@@ -1,4 +1,4 @@
-image: haskell:9.4.8
+image: haskell:9.8.4
 
 variables:
   STACK_ROOT: "${CI_PROJECT_DIR}/.stack"

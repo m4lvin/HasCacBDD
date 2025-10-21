@@ -35,7 +35,7 @@ import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Function (on)
 import Data.List ((\\), minimumBy, nub, permutations, sort)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, listToMaybe)
 import Test.QuickCheck (Arbitrary, Gen, arbitrary, shrink, choose, oneof, sized, listOf)
 
 -- | The CacBDD datatype has no structure because
@@ -369,9 +369,9 @@ anySat b
 -- | Given a set of all variables, complete an assignment.
 completeAss :: [Int] -> Assignment -> [Assignment]
 completeAss allvars ass =
-  if null (addvars ass)
-    then [ass]
-    else concatMap (completeAss allvars) (extend ass (head (addvars ass)))
+  case addvars ass of
+    [] -> [ass]
+    n:_ -> concatMap (completeAss allvars) (extend ass n)
   where
     addvars s = allvars \\ sort (map fst s)
     extend s v = [ (v,False):s, (v,True):s ]
@@ -398,7 +398,7 @@ satCountWith allvars b
 anySatWith :: [Int] -> Bdd -> Maybe Assignment
 anySatWith allvars b = case anySat b of
   Nothing -> Nothing
-  Just partass -> Just $ head $ completeAss allvars partass
+  Just partass -> listToMaybe $ completeAss allvars partass
 
 -- | Relabel variables according to the given mapping.
 -- Note that the mapping list must be sorted!
