@@ -1,8 +1,9 @@
 # HasCacBDD Changelog
 
-## upcoming
+## v0.3.0.1 (2025-10-22)
 
-- ...
+- let `svgGraph` try to find the `dot` executable in multiple common locations. This should make it work on non-Linux systems. (Thanks to @MitchBoontjes for the original patch.)
+- add tests for `Data.HasCacBDD.Visuals` module.
 
 ## v0.3.0.0 (2025-01-01)
 
