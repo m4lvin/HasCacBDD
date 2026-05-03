@@ -308,7 +308,7 @@ sizeOf :: Bdd -> Int
 sizeOf = length . subsOf
 
 instance Show Bdd where
-  show = show . unravel
+  showsPrec d = showsPrec d . unravel
 
 instance Read Bdd where
   readsPrec k input = map (first ravel) (readsPrec k input)

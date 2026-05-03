@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wno-x-partial #-}
 
-module Main where
+module Main (main) where
 
 import Data.List ((\\),nub)
 import Data.Maybe (fromJust,isNothing)
@@ -15,7 +15,7 @@ import Data.HasCacBDD.Visuals
 main :: IO ()
 main  = hspec $ do
   describe "Examples" $ do
-    describe "Creating BDDs" $ do
+    describe "Creating and showing BDDs" $ do
       it "top == Top" $ show top `shouldBe` "Top"
       it "show bot" $ show bot `shouldBe` "Bot"
       it "show (var 1)" $ show (var 1) `shouldBe` "Var 1 Top Bot"
@@ -152,3 +152,11 @@ main  = hspec $ do
         (svgGraph top >>= \ s -> return (length s < 1000)) `shouldReturn` True
       it "svgGraph (var 1) is longer" $
         (svgGraph (var 1) >>= \ s -> return (length s > 1000)) `shouldReturn` True
+  describe "instance Show Bdd" $ do
+    describe "single BDD values" $
+      it "show (var 1 `con` var 2)" $ show (var 1 `con` var 2) `shouldBe` "Var 1 (Var 2 Top Bot) Bot"
+    describe "Pair for precendence test" $ do
+      it "show (P (var 3) top)" $ show (P (var 3) top) `shouldBe` "P (Var 3 Top Bot) Top"
+      it "show (P (var 3) (var 1 `con` var 2))" $ show (P (var 3) (var 1 `con` var 2)) `shouldBe` "P (Var 3 Top Bot) (Var 1 (Var 2 Top Bot) Bot)"
+
+data Pair = P Bdd Bdd deriving (Show)
