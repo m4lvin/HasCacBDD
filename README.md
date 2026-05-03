@@ -33,12 +33,14 @@ Original C++ code from <http://kailesu.net/CacBDD> and a C wrapper are included.
 
 3. Now you can play with Boolean functions :-)
 
-       λ> import Data.HasCacBDD
-       λ> var 5
-       Var 5 Top Bot
-       λ> neg (var 5)
-       Var 5 Bot Top
-       λ> dis (neg (var 3)) (var 3)
-       Top
+       ghci> import Data.HasCacBDD
+       ghci> var 5
+       var 5
+       ghci> neg (var 5)
+       neg (var 5)
+       ghci> dis (neg (var 3)) (var 3)
+       top
+       ghci> dis (neg (var 1)) (var 3)
+       ifthenelse (var 1) (var 3) top
 
 For further documentation, see <https://hackage.haskell.org/package/HasCacBDD/docs/Data-HasCacBDD.html>

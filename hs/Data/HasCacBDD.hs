@@ -28,7 +28,6 @@ module Data.HasCacBDD (
   maximumvar, showInfo
 ) where
 
-import Control.Arrow (Arrow(first))
 import Foreign.C (CInt(..))
 import Foreign.Ptr (Ptr)
 import Foreign (ForeignPtr, newForeignPtr, withForeignPtr, finalizerFree)
@@ -37,6 +36,7 @@ import Data.Function (on)
 import Data.List ((\\), minimumBy, nub, permutations, sort)
 import Data.Maybe (fromJust, listToMaybe)
 import Test.QuickCheck (Arbitrary, Gen, arbitrary, shrink, choose, oneof, sized, listOf)
+import Text.Parsec
 
 -- | The CacBDD datatype has no structure because
 -- from our perspective BDDs are just pointers.
@@ -308,12 +308,29 @@ sizeOf :: Bdd -> Int
 sizeOf = length . subsOf
 
 instance Show Bdd where
-  showsPrec d = showsPrec d . unravel
+  showsPrec d b = f (d > 10) (unravel b) where
+    f :: Bool -> BddTree -> ShowS
+    f _ Bot = ("bot" ++)
+    f _ Top = ("top" ++)
+    f p (Var n Top Bot) = showParen p (("var " ++ show n) ++)
+    f p (Var n Bot Top) = showParen p (("neg (var " ++ show n ++ ")") ++)
+    f p (Var n a c) = showParen p
+      (("ifthenelse (var " ++ show n ++ ") " ++ f True a "" ++ " " ++ f True c "") ++)
 
 instance Read Bdd where
-  readsPrec k input = map (first ravel) (readsPrec k input)
+  readsPrec _ input = either (const []) return (parse pBdd "" input)
 
--- | A simple tree definition to show BDDs as text.
+-- | Parser for 'Bdd' values, used by the 'Read' instance.
+pBdd :: Parsec String () (Bdd,String)
+pBdd = (,) <$> pExp <*> getInput where -- No "<* eof" here, but getInput for readList.
+  pExp = spaces >> (pAtom <|> pIfThenElse <|> pNeg)
+  pAtom = (pConst <|> pVar <|> (char '(' *> pExp <* char ')')) <* spaces
+  pConst = (string "top" >> return top) <|> (string "bot" >> return bot)
+  pVar =  string "var " >> (var . read <$> many1 digit)
+  pNeg = string "neg " >> neg <$> pAtom
+  pIfThenElse = string "ifthenelse " >> spaces >> ifthenelse <$> pAtom <*> pAtom <*> pAtom
+
+-- | A tree definition that is also used to 'show' values ot the 'Bdd' type.
 data BddTree = Bot | Top | Var Int BddTree BddTree deriving (Eq,Read,Show)
 
 -- | Convert a BDD to a tree.
