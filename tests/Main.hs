@@ -16,11 +16,11 @@ main :: IO ()
 main  = hspec $ do
   describe "Examples" $ do
     describe "Creating and showing BDDs" $ do
-      it "top == Top" $ show top `shouldBe` "Top"
-      it "show bot" $ show bot `shouldBe` "Bot"
-      it "show (var 1)" $ show (var 1) `shouldBe` "Var 1 Top Bot"
-      it "show (var 2)" $ show (var 1) `shouldBe` "Var 1 Top Bot"
-      it "show (var 3)" $ show (var 2) `shouldBe` "Var 2 Top Bot"
+      it "top == Top" $ show top `shouldBe` "top"
+      it "show bot" $ show bot `shouldBe` "bot"
+      it "show (var 1)" $ show (var 1) `shouldBe` "var 1"
+      it "show (var 2)" $ show (var 1) `shouldBe` "var 1"
+      it "show (var 3)" $ show (var 2) `shouldBe` "var 2"
     describe "Some tautologies" $ do
       it "bot == bot" $ bot `shouldBe` bot
       it "top == top" $ top `shouldBe` top
@@ -67,8 +67,8 @@ main  = hspec $ do
     it "imp (conSet [var 1,var 0]) (var 1) == top" $ imp (conSet [var 1,var 0]) (var 1) `shouldBe` top
     it "imp (conSet [var 0,var 1]) (var 0) == top" $ imp (conSet [var 0,var 1]) (var 0) `shouldBe` top
     it "imp (con (var 0) (var 1)) (var 0) == top" $ imp (con (var 0) (var 1)) (var 0) `shouldBe` top
-    it "show top == \"Top\"" $ show top `shouldBe` "Top"
-    it "show bot == \"Bot\"" $ show bot `shouldBe` "Bot"
+    it "show top == \"top\"" $ show top `shouldBe` "top"
+    it "show bot == \"bot\"" $ show bot `shouldBe` "bot"
   describe "QuickCheck Properties" $ do
     prop "selfEqual"      (\b -> (b::Bdd) == b)
     prop "showReadEqual"  (\b -> read (show b) == (b::Bdd))
@@ -120,16 +120,12 @@ main  = hspec $ do
                                       gnippam = map swap mapping
                                    in
                                       relabel gnippam (relabel mapping b) == b)
-    prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) == a)
-    prop "substit"       (\b c -> substit 5 b c == ifthenelse b (restrict c (5,True)) (restrict c (5,False)))
-    prop "substit2"      (\b c -> substit (head ([0..] \\ allVarsOf c)) b c == c)
-    prop "substitSimul"  (\b -> substitSimul [] b == b)
-    prop "substitSimul2" (\b n -> substitSimul [(n,var n)] b == b)
+    prop "relabelFun"    (\a -> relabelFun (\x -> x-7) (relabelFun (+7) a) === a)
+    prop "substit"       (\b c -> substit 5 b c === ifthenelse b (restrict c (5,True)) (restrict c (5,False)))
+    prop "substit2"      (\b c -> substit (head ([0..] \\ allVarsOf c)) b c === c)
+    prop "substitSimul"  (\b -> substitSimul [] b === b)
+    prop "substitSimul2" (\b n -> substitSimul [(n,var n)] b === b)
     prop "optimalOrder"  (\b -> sizeOf b < 15 ==> sizeOf (relabel (optimalOrder b) b) <= sizeOf b)
-    prop "show"          (\a b -> (show a == show b) == (a == (b::Bdd)))
-    prop "read"          (\b -> read (show b) == (b :: Bdd))
-    prop "showList"      (\a b -> (showList [unravel a] "" == showList [unravel b] "") == (a == (b::Bdd)))
-    prop "readList"      (\a b -> readList (show [a,b]) == [([unravel a, unravel b] :: [BddTree], "")])
   describe "QuickCheck Expected Failures" $ do
     prop "evaluate may return Nothing" $
       expectFailure (\b ass -> evaluate b ass =/= Nothing)
@@ -152,11 +148,17 @@ main  = hspec $ do
         (svgGraph top >>= \ s -> return (length s < 1000)) `shouldReturn` True
       it "svgGraph (var 1) is longer" $
         (svgGraph (var 1) >>= \ s -> return (length s > 1000)) `shouldReturn` True
-  describe "instance Show Bdd" $ do
-    describe "single BDD values" $
-      it "show (var 1 `con` var 2)" $ show (var 1 `con` var 2) `shouldBe` "Var 1 (Var 2 Top Bot) Bot"
+  describe "instances Show Bdd and Read Bdd" $ do
+    describe "show" $ do
+      it "var 1 `con` var 2" $ show (var 1 `con` var 2) `shouldBe` "ifthenelse (var 1) (var 2) bot"
+      prop "show ==" (\a b -> (show a == show b) === (a == (b::Bdd)))
+      prop "read ==" (\b -> read (show b) === (b :: Bdd))
     describe "Pair for precendence test" $ do
-      it "show (P (var 3) top)" $ show (P (var 3) top) `shouldBe` "P (Var 3 Top Bot) Top"
-      it "show (P (var 3) (var 1 `con` var 2))" $ show (P (var 3) (var 1 `con` var 2)) `shouldBe` "P (Var 3 Top Bot) (Var 1 (Var 2 Top Bot) Bot)"
+      it "show (P (var 3) top)" $ show (P (var 3) top) `shouldBe` "P (var 3) top"
+      it "show (P (var 3) (var 1 `con` var 2))" $ show (P (var 3) (var 1 `con` var 2)) `shouldBe` "P (var 3) (ifthenelse (var 1) (var 2) bot)"
+    describe "showList" $ do
+      prop "showList [a]"  (\a b -> (showList [a] "" == showList [b] "") === (a == (b::Bdd)))
+      prop "readList [a,b]" (\a b -> readList (show [a,b]) === [([a, b] :: [Bdd], "")])
+      prop "readList [...]" (\l -> readList (show l) === [(l :: [Bdd], "")])
 
 data Pair = P Bdd Bdd deriving (Show)
