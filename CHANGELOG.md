@@ -1,5 +1,9 @@
 # HasCacBDD Changelog
 
+## v0.4.0.0 (2026-06-20)
+
+- rewrite "Show" and "Read" instances using "top", "bot", "var", "ifthenelse" and parsec for "Read". This should make them lawful.
+
 ## v0.3.0.1 (2025-10-22)
 
 - let `svgGraph` try to find the `dot` executable in multiple common locations. This should make it work on non-Linux systems. (Thanks to @MitchBoontjes for the original patch.)
