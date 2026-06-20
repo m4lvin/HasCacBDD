@@ -30,7 +30,7 @@ extra-doc-files:
 
 source-repository head
   type:     git
-  location: git://github.com/m4lvin/HasCacBDD.git
+  location: https://github.com/m4lvin/HasCacBDD.git
 
 custom-setup
   setup-depends:       base >= 4.8 && < 5,
