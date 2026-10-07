@@ -1,4 +1,4 @@
-image: haskell:9.8.4
+image: haskell:9.10.3-bookworm
 
 variables:
   STACK_ROOT: "${CI_PROJECT_DIR}/.stack"
@@ -18,7 +18,7 @@ build:
 
 test:
   before_script:
-    - apt-get update -yqq
+    - apt-get update -y
     - apt-get install -y graphviz
   script:
     - stack --no-terminal test --coverage --haddock --no-haddock-deps
@@ -35,7 +35,7 @@ test:
 hlint:
   image: debian:stable
   before_script:
-    - apt-get update -yqq
+    - apt-get update -y
     - apt-get install -y curl
   stage: build
   script:
